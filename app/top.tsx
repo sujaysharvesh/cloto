@@ -1,57 +1,76 @@
+// top.tsx
 "use client";
 
 import { useEffect, useRef } from "react";
+
+const items = [
+  'use code "FIRSTORDER" for free shipping',
+  "bundle & save up to 20%",
+  "free returns on all orders",
+  "new collection — shop now",
+  'use code "FIRSTORDER" for free shipping',
+  "bundle & save up to 20%",
+  "free returns on all orders",
+  "new collection — shop now",
+];
 
 export default function Top() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const scrollContainer = scrollRef.current;
-    if (!scrollContainer) return;
+    const el = scrollRef.current;
+    if (!el) return;
 
-    let animationId: number;
-    let scrollPos = 0;
+    let pos = 0;
+    let id: number;
 
-    const scroll = () => {
-      if (!scrollContainer) return;
-      // Move left by 1px per frame
-      scrollPos -= 1;
-      // Reset position when the first set of items has fully scrolled
-      if (Math.abs(scrollPos) >= scrollContainer.scrollWidth / 2) {
-        scrollPos = 0;
-      }
-      scrollContainer.style.transform = `translateX(${scrollPos}px)`;
-      animationId = requestAnimationFrame(scroll);
+    const tick = () => {
+      pos -= 0.6;
+      if (Math.abs(pos) >= el.scrollWidth / 2) pos = 0;
+      el.style.transform = `translateX(${pos}px)`;
+      id = requestAnimationFrame(tick);
     };
 
-    animationId = requestAnimationFrame(scroll);
-
-    return () => cancelAnimationFrame(animationId);
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
   }, []);
 
   return (
-    <div className="w-full bg-[#1a1a1a] text-white py-3 overflow-hidden whitespace-nowrap text-sm font-light">
-      <div
-        ref={scrollRef}
-        className="inline-flex items-center gap-8"
-      >
-        {/* Duplicate the content to create a seamless loop */}
-        <div className="flex items-center gap-8">
-          <span>• RDER" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-          <span>• use code "FIRSTORDER" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-          <span>• use code "FIRSTORDE" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-        </div>
-        <div className="flex items-center gap-8" aria-hidden="true">
-          <span>• RDER" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-          <span>• use code "FIRSTORDER" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-          <span>• use code "FIRSTORDE" for free shipping</span>
-          <span>• bundle & save up to 20%</span>
-        </div>
+    <div
+      className="w-full overflow-hidden whitespace-nowrap"
+      style={{
+        background: "#1a1a1a",
+        borderBottom: "1px solid #2a2a2a",
+        padding: "10px 0",
+      }}
+    >
+      <div ref={scrollRef} className="inline-flex items-center">
+        {/* render twice for seamless loop */}
+        {[0, 1].map((copy) => (
+          <div
+            key={copy}
+            className="inline-flex items-center"
+            aria-hidden={copy === 1}
+          >
+            {items.map((item, i) => (
+              <span key={i} className="inline-flex items-center">
+                <span
+                  className="text-[11px] uppercase tracking-[0.12em]"
+                  style={{ color: "rgba(255,255,255,0.55)", fontWeight: 400 }}
+                >
+                  {item}
+                </span>
+                {/* dot separator */}
+                <span
+                  className="mx-6 text-[8px]"
+                  style={{ color: "#e05a3a" }}
+                >
+                  ●
+                </span>
+              </span>
+            ))}
+          </div>
+        ))}
       </div>
     </div>
   );

@@ -9,80 +9,143 @@ export default function NavBar() {
   const [renderedMenu, setRenderedMenu] = useState<"shop" | "explore" | null>(null);
 
   const megaRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const navBgRef = useRef<HTMLDivElement>(null);
+  const navWrapRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const animationRef = useRef<gsap.core.Tween | null>(null);
+  const bgAnimRef = useRef<gsap.core.Tween | null>(null);
+  const menuAnimRef = useRef<gsap.core.Tween | null>(null);
+  const isAnimatingOut = useRef(false);
+  const lastScrollY = useRef(0);
+  const navVisible = useRef(true);
 
+  // Scroll — hide on scroll down, show on scroll up
   useEffect(() => {
-    if (!megaRef.current) return;
+    const handleScroll = () => {
+      if (!navWrapRef.current || !navBgRef.current) return;
 
-    if (activeMenu) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
+      const currentY = window.scrollY;
+      const delta = currentY - lastScrollY.current;
+      const scrolledPast = currentY > 80;
+
+      // Show/hide based on direction
+      if (delta > 4 && scrolledPast && navVisible.current) {
+        // Scrolling DOWN — hide
+        navVisible.current = false;
+        gsap.to(navWrapRef.current, {
+          y: "-100%",
+          duration: 0.4,
+          ease: "power3.in",
+        });
+      } else if (delta < -4 && !navVisible.current) {
+        // Scrolling UP — show
+        navVisible.current = true;
+        gsap.to(navWrapRef.current, {
+          y: "0%",
+          duration: 0.5,
+          ease: "expo.out",
+        });
       }
 
-      setRenderedMenu(activeMenu);
-      if (animationRef.current) animationRef.current.kill();
+      // Background fill when scrolled
+      if (!activeMenu) {
+        gsap.to(navBgRef.current, {
+          backgroundColor: scrolledPast ? "#faf8f5" : "rgba(250,248,245,0)",
+          backdropFilter: scrolledPast ? "blur(16px)" : "blur(0px)",
+          duration: 0.4,
+          ease: "power2.out",
+        });
+      }
 
-      animationRef.current = gsap.to(megaRef.current, {
-        maxHeight: 600,
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [activeMenu]);
+
+  // Navbar background driven by menu state
+  useEffect(() => {
+    if (!navBgRef.current) return;
+    if (bgAnimRef.current) bgAnimRef.current.kill();
+
+    bgAnimRef.current = gsap.to(navBgRef.current, {
+      backgroundColor: activeMenu ? "#faf8f5" : "rgba(250,248,245,0)",
+      backdropFilter: activeMenu ? "blur(16px)" : "blur(0px)",
+      duration: activeMenu ? 0.45 : 0.55,
+      ease: activeMenu ? "expo.out" : "expo.inOut",
+    });
+  }, [activeMenu]);
+
+  // Mega menu — luxury reveal
+  useEffect(() => {
+    if (!megaRef.current) return;
+    if (menuAnimRef.current) menuAnimRef.current.kill();
+
+    if (activeMenu) {
+      isAnimatingOut.current = false;
+      setRenderedMenu(activeMenu);
+
+      gsap.set(megaRef.current, {
+        visibility: "visible",
+        y: -24,
+        opacity: 0,
+        scale: 0.98,
+        transformOrigin: "top center",
+      });
+
+      menuAnimRef.current = gsap.to(megaRef.current, {
+        y: 0,
         opacity: 1,
-        duration: 0.3,
-        ease: "power2.out",
+        scale: 1,
+        duration: 0.65,
+        ease: "expo.out",
         overwrite: true,
       });
     } else {
-      if (animationRef.current) animationRef.current.kill();
+      isAnimatingOut.current = true;
 
-      animationRef.current = gsap.to(megaRef.current, {
-        maxHeight: 0,
+      menuAnimRef.current = gsap.to(megaRef.current, {
+        y: -16,
         opacity: 0,
-        duration: 0.25,
-        ease: "power2.in",
+        scale: 0.98,
+        duration: 0.4,
+        ease: "expo.inOut",
         overwrite: true,
         onComplete: () => {
+          if (!isAnimatingOut.current) return;
+          gsap.set(megaRef.current!, { visibility: "hidden" });
           setRenderedMenu(null);
-          animationRef.current = null;
         },
       });
     }
   }, [activeMenu]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      if (animationRef.current) {
-        animationRef.current.kill();
-        animationRef.current = null;
-      }
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (bgAnimRef.current) bgAnimRef.current.kill();
+      if (menuAnimRef.current) menuAnimRef.current.kill();
     };
   }, []);
 
-  const handleMouseEnter = (menu: "shop" | "explore") => {
+  const clearClose = () => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
+  };
+
+  const scheduleClose = () => {
+    clearClose();
+    timeoutRef.current = setTimeout(() => {
+      setActiveMenu(null);
+      timeoutRef.current = null;
+    }, 180);
+  };
+
+  const handleMenuEnter = (menu: "shop" | "explore") => {
+    clearClose();
     setActiveMenu(menu);
-  };
-
-  const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setActiveMenu(null);
-      timeoutRef.current = null;
-    }, 100);
-  };
-
-  const handleMegaMenuLeave = () => {
-    timeoutRef.current = setTimeout(() => {
-      setActiveMenu(null);
-      timeoutRef.current = null;
-    }, 100);
   };
 
   const cardData = [
@@ -107,97 +170,98 @@ export default function NavBar() {
   ];
 
   return (
+    // navWrapRef — this is what slides up/down
     <div
-      className="w-full z-50"
-      style={{ background: "#faf8f5" }}
-      onMouseLeave={handleMouseLeave}
+      ref={navWrapRef}
+      className="relative w-full z-50"
+      style={{ willChange: "transform" }}
+      onMouseLeave={scheduleClose}
     >
-      {/* Main Navbar */}
-      <div style={{ borderBottom: "1px solid #ece7df" }}>
-        <div className="w-full mx-auto px-8">
+      {/* NAVBAR */}
+      <div
+        ref={navBgRef}
+        className="relative"
+        style={{
+          backgroundColor: "rgba(250,248,245,0)",
+          backdropFilter: "blur(0px)",
+          WebkitBackdropFilter: "blur(0px)",
+          borderBottom: "1px solid rgba(236,231,223,0.4)",
+        }}
+      >
+        <div className="w-full px-8">
           <div className="relative flex items-center h-[72px]">
 
-            {/* Nav Links */}
+            {/* NAV LINKS — left */}
             <div className="flex items-center gap-10 flex-1">
               {(["shop", "explore"] as const).map((item) => (
                 <button
                   key={item}
-                  onMouseEnter={() => handleMouseEnter(item)}
+                  onMouseEnter={() => handleMenuEnter(item)}
                   style={{
                     color: activeMenu === item ? "#1a1a1a" : "#8a847c",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    fontSize: "20px",
-                    fontWeight: 700,
+                    fontSize: "17px",
+                    fontWeight: 500,
                     letterSpacing: "0.025em",
                     display: "flex",
                     alignItems: "center",
                     gap: "5px",
                     padding: 0,
-                    transition: "color 0.15s",
+                    transition: "color 0.3s ease",
                   }}
                 >
                   {item}
                   <svg
-                    width="10"
-                    height="10"
-                    viewBox="0 0 10 10"
-                    fill="none"
+                    width="10" height="10" viewBox="0 0 10 10" fill="none"
                     style={{
                       transform: activeMenu === item ? "rotate(180deg)" : "rotate(0deg)",
-                      transition: "transform 0.25s ease",
+                      transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
                     }}
                   >
-                    <path
-                      d="M2 3.5L5 6.5L8 3.5"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
+                    <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               ))}
+
               <button
-                onMouseEnter={() => setActiveMenu(null)}
+                onMouseEnter={() => { clearClose(); setActiveMenu(null); }}
                 style={{
                   color: "#8a847c",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "20px",
-                  fontWeight: 700,
+                  fontSize: "17px",
+                  fontWeight: 500,
                   letterSpacing: "0.025em",
                   padding: 0,
-                  transition: "color 0.15s",
+                  transition: "color 0.3s ease",
                 }}
               >
                 subscribe
               </button>
             </div>
 
+            {/* LOGO — centered */}
             <span
-              className="absolute left-1/2 -translate-x-1/2 font-bold text-[42px] tracking-tight"
-              style={{ color: "#e05a3a", fontFamily: "Georgia, serif" }}
+              className="absolute left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer"
+              style={{
+                color: "#e05a3a",
+                fontFamily: "Georgia, serif",
+                fontSize: "36px",
+              }}
             >
               Cloto
             </span>
-            
-            {/* Icons */}
+
+            {/* ICONS — right */}
             <div className="flex items-center gap-2 ml-auto">
               <button
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
                 style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#5a5550"
-                  strokeWidth="1.8"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a5550" strokeWidth="1.8">
                   <circle cx="11" cy="11" r="7" />
                   <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                 </svg>
@@ -206,14 +270,7 @@ export default function NavBar() {
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
                 style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
               >
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="#5a5550"
-                  strokeWidth="1.8"
-                >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a5550" strokeWidth="1.8">
                   <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />
@@ -225,144 +282,123 @@ export default function NavBar() {
         </div>
       </div>
 
-      {/* Mega Menu */}
+      {/* MEGA MENU */}
       <div
         ref={megaRef}
-        className="absolute left-0 w-full overflow-hidden"
+        className="absolute left-0 w-full"
         style={{
-            maxHeight: 0,
-            opacity: 0,
-            visibility: activeMenu ? "visible" : "hidden",
-            background: "#f8f5eb",
-            boxShadow: "0 20px 40px rgba(0,0,0,0.06)",
-          
-            // borderBottomLeftRadius: "32px",
-            // borderBottomRightRadius: "32px",
-          
-            border: "1px solid #d7d2c8",
-            borderTop: "none",
-          }}
-        onMouseEnter={() => {
-          if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
-            timeoutRef.current = null;
-          }
+          opacity: 0,
+          visibility: "hidden",
+          background: "#faf8f5",
+          borderBottom: "1px solid #ece7df",
+          boxShadow: "0 24px 48px -12px rgba(0,0,0,0.08), 0 8px 16px -4px rgba(0,0,0,0.04)",
+          borderBottomLeftRadius: "24px",
+          borderBottomRightRadius: "24px",
+          overflow: "hidden",
+          transformOrigin: "top center",
         }}
-        onMouseLeave={handleMegaMenuLeave}
+        onMouseEnter={clearClose}
+        onMouseLeave={scheduleClose}
       >
-        <div ref={contentRef}>
-
-          {/* SHOP MENU */}
-          {renderedMenu === "shop" && (
-            <div className="max-w-8xl mx-auto px-8 py-12">
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-3xl font-bold" style={{ color: "#1a1a1a" }}>
-                  Choose your mood
-                </h2>
-                <button
-                  className="flex items-center gap-2 px-6 py-3 rounded-full"
-                  style={{
-                    background: "#1a1a1a",
-                    color: "#fff",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: "pointer",
-                    letterSpacing: "0.025em",
-                  }}
-                >
-                  view all
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Cards Grid */}
-              <div className="grid grid-cols-3 gap-6">
-                {cardData.map((card, index) => (
-                  <Card key={index} {...card} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* EXPLORE MENU */}
-          {renderedMenu === "explore" && (
-            <div className="max-w-8xl mx-auto px-8 py-9 flex justify-between">
-
-              {/* Nav links */}
-              <div className="flex flex-col gap-[2px] min-w-[130px] justify-center">
-                {["our story", "learn", "faqs"].map((link) => (
-                  <span
-                    key={link}
-                    className="text-[42px] font-bold cursor-pointer leading-tight"
-                    style={{
-                      color: "#1a1a1a",
-                      fontFamily: "Georgia, serif",
-                      transition: "color 0.15s",
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#c8c2ba")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#1a1a1a")}
-                  >
-                    {link}
-                  </span>
-                ))}
-              </div>
-
-              {/* Thin divider */}
-              {/* <div
+        {/* SHOP MENU */}
+        {renderedMenu === "shop" && (
+          <div className="max-w-8xl mx-auto px-8 py-12">
+            <div className="flex items-center justify-between mb-8">
+              <h2
+                className="font-semibold"
+                style={{ color: "#1a1a1a", fontFamily: "Georgia, serif", fontSize: "28px" }}
+              >
+                Choose your mood
+              </h2>
+              <button
+                className="flex items-center gap-2 px-6 py-3"
                 style={{
-                  width: "1px",
-                  background: "#e5dfd6",
-                  alignSelf: "stretch",
-                  flexShrink: 2,
+                  background: "#1a1a1a",
+                  color: "#fff",
+                  fontSize: "12px",
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                  letterSpacing: "0.08em",
+                  borderRadius: "100px",
+                  textTransform: "uppercase",
                 }}
-              /> */}
-
-              {/* Articles */}
-              <div className="flex gap-6 ml-auto">
-                {[
-                  {
-                    gradient: "linear-gradient(135deg, #e07030 0%, #c04010 100%)",
-                    title:
-                      "Discover timeless styles crafted for effortless everyday wear.",
-                  },
-                  {
-                    gradient: "linear-gradient(135deg, #e89050 0%, #d06020 100%)",
-                    title:
-                      "Explore breathable essentials designed for comfort and modern living.",
-                  },
-                ].map(({ gradient, title }, i) => (
-                  <div key={i} className="cursor-pointer w-[340px] group">
-                    <div
-                      className="w-full h-[220px] rounded-2xl mb-5"
-                      style={{ background: gradient, transition: "opacity 0.2s ease" }}
-                      onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.85")}
-                      onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                    />
-                    <p
-                      className="text-[20px] leading-snug font-medium"
-                      style={{
-                        color: "#3a3530",
-                        textDecoration: "underline",
-                        textUnderlineOffset: "3px",
-                        textDecorationColor: "#c8c2ba",
-                        transition: "color 0.15s",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = "#8a847c")}
-                      onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3530")}
-                    >
-                      {title}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
+              >
+                view all
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
             </div>
-          )}
+            <div className="grid grid-cols-3 gap-5">
+              {cardData.map((card, index) => (
+                <Card key={index} {...card} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        </div>
+        {/* EXPLORE MENU */}
+        {renderedMenu === "explore" && (
+          <div className="max-w-8xl mx-auto px-8 py-10 flex justify-between items-center">
+            <div className="flex flex-col gap-0 min-w-[130px] justify-center">
+              {["our story", "learn", "faqs"].map((link) => (
+                <span
+                  key={link}
+                  className="font-bold cursor-pointer leading-tight"
+                  style={{
+                    fontSize: "42px",
+                    color: "#1a1a1a",
+                    fontFamily: "Georgia, serif",
+                    transition: "color 0.3s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#c8c2ba")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "#1a1a1a")}
+                >
+                  {link}
+                </span>
+              ))}
+            </div>
+
+            <div style={{ width: "1px", background: "#ece7df", alignSelf: "stretch", flexShrink: 0, margin: "0 40px" }} />
+
+            <div className="flex gap-6 flex-1">
+              {[
+                {
+                  gradient: "linear-gradient(135deg, #e07030 0%, #c04010 100%)",
+                  title: "Discover timeless styles crafted for effortless everyday wear.",
+                },
+                {
+                  gradient: "linear-gradient(135deg, #e89050 0%, #d06020 100%)",
+                  title: "Explore breathable essentials designed for comfort and modern living.",
+                },
+              ].map(({ gradient, title }, i) => (
+                <div key={i} className="cursor-pointer flex-1 max-w-[300px]">
+                  <div
+                    className="w-full h-[180px] mb-4"
+                    style={{ background: gradient, borderRadius: "16px", transition: "opacity 0.35s ease" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.8")}
+                    onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                  />
+                  <p
+                    className="text-[14px] leading-snug"
+                    style={{
+                      color: "#3a3530",
+                      textDecoration: "underline",
+                      textUnderlineOffset: "3px",
+                      textDecorationColor: "#c8c2ba",
+                      transition: "color 0.3s ease",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#8a847c")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#3a3530")}
+                  >
+                    {title}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

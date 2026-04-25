@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { ArrowRight } from "lucide-react";
 
 export default function Main() {
   return (
-    <div className="px-[6px] bg-white">
-      <div className="relative h-screen overflow-hidden rounded-[px]">
+    <div className="px-2" style={{ background: "#faf8f5" }}>
+      <div className="relative h-screen overflow-hidden" style={{ borderRadius: "20px" }}>
 
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
@@ -19,26 +20,46 @@ export default function Main() {
           />
         </div>
 
-        {/* Dark Overlay */}
-        <div className="absolute inset-0 bg-black/20 z-10" />
+        {/* Gradient Overlay — bottom-up like Trend cards */}
+        <div
+          className="absolute inset-0 z-10"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.05) 55%)" }}
+        />
 
         {/* Content */}
-        <div className="relative z-20 h-full flex items-end">
+        <div className="relative z-20 h-full flex flex-col justify-between px-10 sm:px-16 md:px-20 py-14">
 
-          {/* LEFT BOTTOM TEXT */}
-          <div className="pb-16 pl-10 sm:pl-16 md:pl-20 max-w-3xl">
+          {/* TOP LABELS — same as all sections */}
+          <div
+            className="flex items-center justify-between pb-4"
+            style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
+          >
+            <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
+              Cloto
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
+              New Collection
+            </span>
+          </div>
 
-            {/* Small Label */}
-            <p className="text-white/80 uppercase tracking-[0.35em] text-xs sm:text-sm mb-5">
-              NEW COLLECTION
+          {/* BOTTOM CONTENT */}
+          <div className="max-w-3xl">
+
+            {/* Eyebrow */}
+            <p
+              className="text-[11px] uppercase tracking-[0.14em] mb-4"
+              style={{ color: "rgba(255,255,255,0.6)" }}
+            >
+              the right amount of
             </p>
 
-            {/* Main Heading */}
+            {/* Heading */}
             <h1
-              className="text-white leading-[0.92] mb-6 text-5xl sm:text-6xl md:text-7xl lg:text-[92px]"
+              className="text-white leading-[0.92] mb-6"
               style={{
                 fontFamily: "Georgia, serif",
                 fontWeight: 600,
+                fontSize: "clamp(52px, 8vw, 96px)",
               }}
             >
               Elevated,
@@ -47,15 +68,28 @@ export default function Main() {
             </h1>
 
             {/* Description */}
-            <p className="text-white/85 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mb-8">
+            <p
+              className="text-[15px] leading-relaxed max-w-xl mb-10"
+              style={{ color: "rgba(255,255,255,0.75)", fontWeight: 300 }}
+            >
               Softer, more sustainable, and effortlessly refined —
               designed for everyday comfort with timeless silhouettes
               inspired by modern coastal living.
             </p>
 
-            {/* CTA */}
-            <button className="border border-white text-white px-8 py-4 text-sm uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all duration-300">
-              SHOP COLLECTION
+            {/* CTA — pill button matching Trend cards */}
+            <button
+              className="flex items-center gap-3 px-7 py-[14px] text-[13px] uppercase tracking-[0.12em] font-medium transition-all duration-300 hover:gap-5"
+              style={{
+                background: "rgba(255,255,255,0.95)",
+                color: "#1a1a1a",
+                borderRadius: "100px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Shop Collection
+              <ArrowRight size={15} />
             </button>
 
           </div>
