@@ -4,34 +4,62 @@ import Image from "next/image";
 
 export default function Main() {
   return (
-    <div className="relative w-full h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image - Full coverage */}
-      <div className="absolute inset-0 z-0">
-        <Image
-          src="/main.jpg"
-          alt="Background"
-          fill
-          priority
-          className="object-cover"
-          sizes="100vw"
-        //   quality={75}        
-        />
-      </div>
+    <div className="px-[6px] bg-white">
+      <div className="relative h-screen overflow-hidden rounded-[px]">
 
-      {/* Dark overlay for better text readability (optional) */}
-      <div className="absolute inset-0 z-10 " />
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <Image
+            src="/main.jpg"
+            alt="Background"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
+          />
+        </div>
 
-      {/* Text Content - Centered on top of image */}
-      <div className="relative z-20 text-center px-4 sm:px-6 md:px-8 max-w-4xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light text-white mb-4 drop-shadow-lg tracking-wide">
-          Elevated, Naturally
-        </h1>
-        <p className="text-sm sm:text-base md:text-lg text-white/80 mb-8 max-w-2xl mx-auto leading-relaxed">
-          Softer, more sustainable, and easier care (hello vacation!), hemp does it better than linen.
-        </p>
-        <button className="bg-transparent border-2 border-white text-white px-8 py-3 sm:px-10 sm:py-3 md:px-12 md:py-4 text-sm sm:text-base uppercase tracking-wider font-medium hover:bg-white hover:text-gray-900 transition-all duration-300">
-          SHOP TAJ HEMP
-        </button>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/20 z-10" />
+
+        {/* Content */}
+        <div className="relative z-20 h-full flex items-end">
+
+          {/* LEFT BOTTOM TEXT */}
+          <div className="pb-16 pl-10 sm:pl-16 md:pl-20 max-w-3xl">
+
+            {/* Small Label */}
+            <p className="text-white/80 uppercase tracking-[0.35em] text-xs sm:text-sm mb-5">
+              NEW COLLECTION
+            </p>
+
+            {/* Main Heading */}
+            <h1
+              className="text-white leading-[0.92] mb-6 text-5xl sm:text-6xl md:text-7xl lg:text-[92px]"
+              style={{
+                fontFamily: "Georgia, serif",
+                fontWeight: 600,
+              }}
+            >
+              Elevated,
+              <br />
+              Naturally
+            </h1>
+
+            {/* Description */}
+            <p className="text-white/85 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl mb-8">
+              Softer, more sustainable, and effortlessly refined —
+              designed for everyday comfort with timeless silhouettes
+              inspired by modern coastal living.
+            </p>
+
+            {/* CTA */}
+            <button className="border border-white text-white px-8 py-4 text-sm uppercase tracking-[0.2em] hover:bg-white hover:text-black transition-all duration-300">
+              SHOP COLLECTION
+            </button>
+
+          </div>
+        </div>
       </div>
     </div>
   );

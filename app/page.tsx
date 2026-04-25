@@ -1,8 +1,10 @@
 "use client"
 
+import Featured from "./featured";
 import Main from "./main";
 import NavBar from "./navbar";
 import Top from "./top";
+import Trend from "./trend";
 
 export default function Home() {
   return (
@@ -17,6 +19,8 @@ export default function Home() {
         </div>
         <Main />
       </div>
+      <Featured/>
+      <Trend/>
     </div>
-  );
+  )
 }
