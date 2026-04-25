@@ -49,8 +49,8 @@ export default function NavBar() {
       // Background fill when scrolled
       if (!activeMenu) {
         gsap.to(navBgRef.current, {
-          backgroundColor: scrolledPast ? "#faf8f5" : "rgba(250,248,245,0)",
-          backdropFilter: scrolledPast ? "blur(16px)" : "blur(0px)",
+          backgroundColor: "#faf8f5",
+backdropFilter: "blur(16px)",
           duration: 0.4,
           ease: "power2.out",
         });
@@ -69,10 +69,10 @@ export default function NavBar() {
     if (bgAnimRef.current) bgAnimRef.current.kill();
 
     bgAnimRef.current = gsap.to(navBgRef.current, {
-      backgroundColor: activeMenu ? "#faf8f5" : "rgba(250,248,245,0)",
-      backdropFilter: activeMenu ? "blur(16px)" : "blur(0px)",
-      duration: activeMenu ? 0.45 : 0.55,
-      ease: activeMenu ? "expo.out" : "expo.inOut",
+      backgroundColor: "#faf8f5",
+      backdropFilter: "blur(16px)",
+      duration: 0.45,
+      ease: "expo.out",
     });
   }, [activeMenu]);
 
@@ -182,7 +182,7 @@ export default function NavBar() {
         ref={navBgRef}
         className="relative"
         style={{
-          backgroundColor: "rgba(250,248,245,0)",
+          backgroundColor: "#faf8f5",
           backdropFilter: "blur(0px)",
           WebkitBackdropFilter: "blur(0px)",
           borderBottom: "1px solid rgba(236,231,223,0.4)",
@@ -198,11 +198,11 @@ export default function NavBar() {
                   key={item}
                   onMouseEnter={() => handleMenuEnter(item)}
                   style={{
-                    color: activeMenu === item ? "#1a1a1a" : "#8a847c",
+                    color: activeMenu === item ? "#111111" : "#2f2a26",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    fontSize: "17px",
+                    fontSize: "20px",
                     fontWeight: 500,
                     letterSpacing: "0.025em",
                     display: "flex",
@@ -228,11 +228,11 @@ export default function NavBar() {
               <button
                 onMouseEnter={() => { clearClose(); setActiveMenu(null); }}
                 style={{
-                  color: "#8a847c",
+                  color: "#2f2a26",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
-                  fontSize: "17px",
+                  fontSize: "20px",
                   fontWeight: 500,
                   letterSpacing: "0.025em",
                   padding: 0,
@@ -245,9 +245,9 @@ export default function NavBar() {
 
             {/* LOGO — centered */}
             <span
-              className="absolute left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer"
+              className="absolute text-white left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer"
               style={{
-                color: "#e05a3a",
+                color: "#2f2a26",
                 fontFamily: "Georgia, serif",
                 fontSize: "36px",
               }}
@@ -261,7 +261,7 @@ export default function NavBar() {
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
                 style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a5550" strokeWidth="1.8">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f1f1f" strokeWidth="1.8">
                   <circle cx="11" cy="11" r="7" />
                   <path d="M21 21l-4.35-4.35" strokeLinecap="round" />
                 </svg>
@@ -270,7 +270,7 @@ export default function NavBar() {
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
                 style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5a5550" strokeWidth="1.8">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f1f1f" strokeWidth="1.8">
                   <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 01-8 0" />

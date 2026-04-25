@@ -6,12 +6,14 @@ import { ArrowRight } from "lucide-react";
 export default function Main() {
   return (
     <div className="px-2" style={{ background: "#faf8f5" }}>
-      <div className="relative h-screen overflow-hidden" style={{ borderRadius: "20px" }}>
+      <div className="relative h-screen overflow-hidden" 
+      // style={{ borderRadius: "20px" }}
+      >
 
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/main.jpg"
+            src="/shopp.jpg"
             alt="Background"
             fill
             priority

@@ -1,6 +1,8 @@
 "use client"
 
 import AboutSection from "./AboutSection";
+import Footer from "./Footer";
+import PersonalShopper from "./PersonalShopper";
 import Featured from "./featured";
 import Main from "./main";
 import NavBar from "./navbar";
@@ -23,6 +25,8 @@ export default function Home() {
       <Featured/>
       <Trend/>
       <AboutSection/>
+      <PersonalShopper/>
+      <Footer/>
     </div>
   )
 }

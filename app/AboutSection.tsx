@@ -32,9 +32,9 @@ export default function AboutSection() {
         </div>
 
         {/* MAIN TEXT — bottom left */}
-        <div className="max-w-[580px] mt-auto ml-auto text-left">
+        <div className="max-w-[580px] mt-auto ml-auto text-right">
 
-          <p className="text-[31px] leading-[1.2] tracking-[-0.02em] text-white font-light">
+          <p className="text-[15px] leading-[1.2] tracking-[-0.02em] text-white font-light">
             From the renowned tailoring atelier of Vilmo Martini in Carrara
             to the international Mason's brand: discover how, in 1974,
             his son Giorgio transformed his father's craftsmanship into an

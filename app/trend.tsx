@@ -7,7 +7,7 @@ export default function Trend() {
   return (
     <section className="w-full py-24" style={{ background: "#faf8f5" }}>
 
-      <div className="max-w-7xl mx-auto px-8">
+      <div className="mx-auto px-8">
 
         {/* TOP LABELS */}
         <div
@@ -52,7 +52,11 @@ export default function Trend() {
           {/* WOMEN */}
           <div
             className="relative overflow-hidden group cursor-pointer"
-            style={{ height: "780px", borderRadius: "20px" }}
+            style={{
+            height: "780px", 
+            // borderRadius: "20px" 
+        }
+        }
           >
             <Image
               src="/pants.png"
@@ -101,7 +105,10 @@ export default function Trend() {
           {/* MEN */}
           <div
             className="relative overflow-hidden group cursor-pointer"
-            style={{ height: "780px", borderRadius: "20px" }}
+            style={{
+                 height: "780px",
+                //   borderRadius: "20px"
+                 }}
           >
             <Image
               src="/shirt.png"

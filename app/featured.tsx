@@ -46,7 +46,7 @@ export default function Featured() {
   return (
     <section className="w-full py-24 overflow-hidden" style={{ background: "#faf8f5" }}>
 
-      <div className="max-w-7xl mx-auto px-8">
+      <div className="mx-auto px-8">
 
         {/* TOP LABELS */}
         <div
