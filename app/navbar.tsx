@@ -18,7 +18,7 @@ export default function NavBar() {
   const lastScrollY = useRef(0);
   const navVisible = useRef(true);
 
-  // Scroll — hide on scroll down, show on scroll up
+  // Scroll — hide on scroll down, show on scroll up + bg fade
   useEffect(() => {
     const handleScroll = () => {
       if (!navWrapRef.current || !navBgRef.current) return;
@@ -27,30 +27,19 @@ export default function NavBar() {
       const delta = currentY - lastScrollY.current;
       const scrolledPast = currentY > 80;
 
-      // Show/hide based on direction
       if (delta > 4 && scrolledPast && navVisible.current) {
-        // Scrolling DOWN — hide
         navVisible.current = false;
-        gsap.to(navWrapRef.current, {
-          y: "-100%",
-          duration: 0.4,
-          ease: "power3.in",
-        });
+        gsap.to(navWrapRef.current, { y: "-100%", duration: 0.4, ease: "power3.in" });
       } else if (delta < -4 && !navVisible.current) {
-        // Scrolling UP — show
         navVisible.current = true;
-        gsap.to(navWrapRef.current, {
-          y: "0%",
-          duration: 0.5,
-          ease: "expo.out",
-        });
+        gsap.to(navWrapRef.current, { y: "0%", duration: 0.5, ease: "expo.out" });
       }
 
-      // Background fill when scrolled
       if (!activeMenu) {
-        gsap.to(navBgRef.current, {
-          backgroundColor: "#faf8f5",
-backdropFilter: "blur(16px)",
+        if (bgAnimRef.current) bgAnimRef.current.kill();
+        bgAnimRef.current = gsap.to(navBgRef.current, {
+          backgroundColor: scrolledPast ? "#faf8f5" : "rgba(250,248,245,0)",
+          backdropFilter: scrolledPast ? "blur(16px)" : "blur(0px)",
           duration: 0.4,
           ease: "power2.out",
         });
@@ -63,20 +52,20 @@ backdropFilter: "blur(16px)",
     return () => window.removeEventListener("scroll", handleScroll);
   }, [activeMenu]);
 
-  // Navbar background driven by menu state
+  // Navbar bg driven by menu open/close
   useEffect(() => {
     if (!navBgRef.current) return;
     if (bgAnimRef.current) bgAnimRef.current.kill();
 
     bgAnimRef.current = gsap.to(navBgRef.current, {
-      backgroundColor: "#faf8f5",
-      backdropFilter: "blur(16px)",
-      duration: 0.45,
-      ease: "expo.out",
+      backgroundColor: activeMenu ? "#faf8f5" : "rgba(250,248,245,0)",
+      backdropFilter: activeMenu ? "blur(16px)" : "blur(0px)",
+      duration: activeMenu ? 0.35 : 0.45,
+      ease: activeMenu ? "expo.out" : "expo.inOut",
     });
   }, [activeMenu]);
 
-  // Mega menu — luxury reveal
+  // Mega menu — drops from BEHIND navbar (clips at top, reveals downward)
   useEffect(() => {
     if (!megaRef.current) return;
     if (menuAnimRef.current) menuAnimRef.current.kill();
@@ -87,17 +76,14 @@ backdropFilter: "blur(16px)",
 
       gsap.set(megaRef.current, {
         visibility: "visible",
-        y: -24,
-        opacity: 0,
-        scale: 0.98,
+        clipPath: "inset(0% 0% 100% 0%)",
+        opacity: 1,
         transformOrigin: "top center",
       });
 
       menuAnimRef.current = gsap.to(megaRef.current, {
-        y: 0,
-        opacity: 1,
-        scale: 1,
-        duration: 0.65,
+        clipPath: "inset(0% 0% 0% 0%)",
+        duration: 0.55,
         ease: "expo.out",
         overwrite: true,
       });
@@ -105,10 +91,8 @@ backdropFilter: "blur(16px)",
       isAnimatingOut.current = true;
 
       menuAnimRef.current = gsap.to(megaRef.current, {
-        y: -16,
-        opacity: 0,
-        scale: 0.98,
-        duration: 0.4,
+        clipPath: "inset(0% 0% 100% 0%)",
+        duration: 0.38,
         ease: "expo.inOut",
         overwrite: true,
         onComplete: () => {
@@ -170,22 +154,22 @@ backdropFilter: "blur(16px)",
   ];
 
   return (
-    // navWrapRef — this is what slides up/down
     <div
       ref={navWrapRef}
-      className="relative w-full z-50"
+      className="w-full z-50"
       style={{ willChange: "transform" }}
       onMouseLeave={scheduleClose}
     >
       {/* NAVBAR */}
       <div
         ref={navBgRef}
-        className="relative"
         style={{
-          backgroundColor: "#faf8f5",
+          backgroundColor: "rgba(250,248,245,0)",
           backdropFilter: "blur(0px)",
           WebkitBackdropFilter: "blur(0px)",
-          borderBottom: "1px solid rgba(236,231,223,0.4)",
+          borderBottom: "1px solid rgba(236,231,223,0)",
+          position: "relative",
+          zIndex: 10,
         }}
       >
         <div className="w-full px-8">
@@ -198,7 +182,7 @@ backdropFilter: "blur(16px)",
                   key={item}
                   onMouseEnter={() => handleMenuEnter(item)}
                   style={{
-                    color: activeMenu === item ? "#111111" : "#2f2a26",
+                    color: activeMenu === item ? "#1a1a1a" : "#2f2a26",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
@@ -245,7 +229,7 @@ backdropFilter: "blur(16px)",
 
             {/* LOGO — centered */}
             <span
-              className="absolute text-white left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer"
+              className="absolute left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer"
               style={{
                 color: "#2f2a26",
                 fontFamily: "Georgia, serif",
@@ -259,7 +243,7 @@ backdropFilter: "blur(16px)",
             <div className="flex items-center gap-2 ml-auto">
               <button
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
-                style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
+                style={{ border: "1px solid rgba(221,216,208,0.6)", background: "transparent", cursor: "pointer" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f1f1f" strokeWidth="1.8">
                   <circle cx="11" cy="11" r="7" />
@@ -268,7 +252,7 @@ backdropFilter: "blur(16px)",
               </button>
               <button
                 className="w-[34px] h-[34px] rounded-full flex items-center justify-center"
-                style={{ border: "1px solid #ddd8d0", background: "transparent", cursor: "pointer" }}
+                style={{ border: "1px solid rgba(221,216,208,0.6)", background: "transparent", cursor: "pointer" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1f1f1f" strokeWidth="1.8">
                   <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
@@ -282,20 +266,24 @@ backdropFilter: "blur(16px)",
         </div>
       </div>
 
-      {/* MEGA MENU */}
+      {/* MEGA MENU — positioned to start from very top of navbar */}
       <div
         ref={megaRef}
-        className="absolute left-0 w-full"
         style={{
-          opacity: 0,
+          position: "absolute",
+          top: 0,           // starts at the very top of navWrapRef
+          left: 0,
+          width: "100%",
           visibility: "hidden",
+          clipPath: "inset(0% 0% 100% 0%)",
           background: "#faf8f5",
           borderBottom: "1px solid #ece7df",
-          boxShadow: "0 24px 48px -12px rgba(0,0,0,0.08), 0 8px 16px -4px rgba(0,0,0,0.04)",
+          boxShadow: "0 24px 48px -12px rgba(0,0,0,0.08)",
           borderBottomLeftRadius: "24px",
           borderBottomRightRadius: "24px",
           overflow: "hidden",
-          transformOrigin: "top center",
+          zIndex: 5,        // sits BELOW navbar bar (z:10) so it drops out from under it
+          paddingTop: "72px", // offset so content starts below the navbar bar
         }}
         onMouseEnter={clearClose}
         onMouseLeave={scheduleClose}

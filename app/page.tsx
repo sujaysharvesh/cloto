@@ -8,25 +8,26 @@ import Main from "./main";
 import NavBar from "./navbar";
 import Top from "./top";
 import Trend from "./trend";
+import SmoothScroll from "@/component/SmoothScroll";
 
 export default function Home() {
   return (
-    <div className="relative w-full">
-      {/* Top announcement bar */}
-      {/* <Top /> */}
+    <SmoothScroll>
+      <div className="relative w-full">
 
-      {/* Navbar + Hero stacked so navbar overlays hero */}
-      <div className="relative">
+        {/* Navbar fixed overlay */}
         <div className="fixed top-0 left-0 w-full z-50">
           <NavBar />
         </div>
+
         <Main />
+        <Featured />
+        <Trend />
+        <AboutSection />
+        <PersonalShopper />
+        <Footer />
+
       </div>
-      <Featured/>
-      <Trend/>
-      <AboutSection/>
-      <PersonalShopper/>
-      <Footer/>
-    </div>
-  )
+    </SmoothScroll>
+  );
 }
