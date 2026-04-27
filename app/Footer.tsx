@@ -245,7 +245,7 @@ export default function Footer() {
             select-none
           "
           style={{
-            fontFamily: "Georgia, serif",
+            fontFamily: "Telma",
             color: "#0a0a0a",
             fontSize: "clamp(72px, 18vw, 260px)",
             letterSpacing: "-0.02em",
