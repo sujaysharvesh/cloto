@@ -30,3 +30,11 @@ html, body {
   overflow: hidden;
   height: 100%;
 } */
+
+@font-face {
+  font-family: 'Telma';
+  src: url('/fonts/Telma-Black.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+

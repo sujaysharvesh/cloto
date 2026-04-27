@@ -55,9 +55,11 @@ export default function Card({
         </p>
 
         {/* CTA */}
-        <button className="w-fit border-b border-white pb-1 text-sm uppercase tracking-wider hover:opacity-70 transition">
-          {buttonText}
-        </button>
+        <button 
+  className="relative w-fit text-sm uppercase tracking-wider transition after:absolute after:bottom-[-4px] after:left-0 after:h-px after:w-0 after:bg-white after:transition-all after:duration-300 hover:after:w-full"
+>
+  {buttonText}
+</button>
       </div>
     </div>
   );

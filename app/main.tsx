@@ -36,12 +36,12 @@ export default function Main() {
             className="flex items-center justify-between pb-4"
             style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
           >
-            <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
+            {/* <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
               Cloto
             </span>
             <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
               New Collection
-            </span>
+            </span> */}
           </div>
 
           {/* BOTTOM CONTENT */}
