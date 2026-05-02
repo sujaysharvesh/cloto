@@ -58,7 +58,7 @@ export default function PersonalShopper() {
           </div>
 
           {/* MAIN GRID */}
-          <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-12 items-center">
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-8 md:gap-12 items-start">
             {/* LEFT IMAGE */}
             <div
               className="relative overflow-hidden w-full order-1 md:order-none"
@@ -82,7 +82,7 @@ export default function PersonalShopper() {
 
             {/* RIGHT CONTENT */}
             <div
-              className="flex flex-col items-center md:items-end text-center md:text-right w-full order-2 md:order-none"
+              className="flex flex-col items-start md:items-end text-center md:text-right w-full order-2 md:order-none"
               style={{
                 paddingTop: "0px",
                 paddingBottom: "0px",
@@ -91,7 +91,7 @@ export default function PersonalShopper() {
               {/* TOP CONTENT */}
               <div className="flex flex-col items-center md:items-end w-full">
                 <p
-                  className="text-[10px] md:text-[11px] uppercase tracking-[0.14em] mb-3 md:mb-5"
+                  className="text-[10px] md:text-[11px] uppercase tracking-[0.14em] mb-4 md:mb-5"
                   style={{ color: "#b0a89e" }}
                 >
                   the right amount of
@@ -124,7 +124,7 @@ export default function PersonalShopper() {
               {/* BOTTOM CONTENT */}
               <div className="flex flex-col items-center md:items-end w-full mt-6 md:mt-0">
                 <p
-                  className="text-[14px] md:text-[15px] font-light max-w-[560px] md:max-w-[420px] text-center md:text-right leading-relaxed mb-4"
+                  className="text-[14px] md:text-[15px] font-light max-w-[560px] md:max-w-[520px] text-center md:text-right leading-relaxed mb-4"
                   style={{ color: "#8a847c" }}
                 >
                   With our Personal Shopper service, you can discover

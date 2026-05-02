@@ -153,7 +153,7 @@ export default function Footer() {
             <div className="flex flex-col gap-2">
               {[
                 "hello@cloto.com",
-                "+91 98765 43210",
+                "+91 5555599999",
               ].map((item) => (
                 <span
                   key={item}
