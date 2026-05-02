@@ -34,162 +34,206 @@ export default function ProductPage() {
   return (
     <SmoothScroll>
       <section className="w-full" style={{ background: "#fafafa" }}>
-      <div className="flex">
 
-        {/* LEFT — scrollable image grid */}
-        <div className="w-[58%] grid grid-cols-2 gap-2 p-2 bg-white">
-          {product.images.map((img, i) => (
-            <div
-              key={i}
-              className="relative"
-              style={{
-                // first image full width
-                gridColumn: i === 0 ? "1 / -1" : "auto",
-                height: i === 0 ? "100vh" : "60vw",
-                background: "#f7f4ef",
-              }}
+        {/* Mobile: stacked layout | Desktop: side-by-side */}
+        <div className="flex flex-col lg:flex-row">
+
+          {/* LEFT — image grid */}
+          <div className="w-full lg:w-[58%] grid grid-cols-2 gap-2 p-2 bg-white">
+            {product.images.map((img, i) => (
+              <div
+                key={i}
+                className="relative"
+                style={{
+                  gridColumn: i === 0 ? "1 / -1" : "auto",
+                  // Mobile: first image shorter, rest smaller; Desktop: original sizes
+                  height: i === 0 ? "clamp(300px, 70vw, 100vh)" : "clamp(160px, 40vw, 60vw)",
+                  background: "#f7f4ef",
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`${product.title} ${i + 1}`}
+                  fill
+                  priority={i === 0}
+                  className="object-cover"
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* RIGHT — sticky panel on desktop, normal flow on mobile */}
+          <div
+            className="w-full lg:w-[42%] lg:sticky lg:top-0 lg:h-screen flex flex-col px-5 py-8 sm:px-8 lg:px-14 lg:py-14 lg:overflow-y-auto"
+            style={{ borderTop: "1px solid #e8e8e8", borderLeft: "0px" }}
+          >
+            {/* Add desktop-only left border via a wrapper trick */}
+            <style>{`
+              @media (min-width: 1024px) {
+                .right-panel {
+                  border-top: none !important;
+                  border-left: 1px solid #e8e8e8 !important;
+                }
+              }
+            `}</style>
+
+            {/* BACK */}
+            <button
+              onClick={() => router.back()}
+              className="flex items-center gap-2 mb-8 w-fit transition-colors duration-200 right-panel"
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "#1a1a1a")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa")}
             >
-              <Image
-                src={img}
-                alt={`${product.title} ${i + 1}`}
-                fill
-                priority={i === 0}
-                className="object-cover"
-              />
+              <ArrowLeft size={14} />
+              <span className="text-[11px] uppercase tracking-[0.12em]">Back</span>
+            </button>
+
+            {/* TITLE + PRICE */}
+            <div className="flex items-start justify-between gap-6 mb-6">
+              <h1
+                className="text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.02em] leading-snug"
+                style={{ color: "#111" }}
+              >
+                {product.title}
+              </h1>
+              <span className="text-[15px] sm:text-[16px] font-semibold whitespace-nowrap" style={{ color: "#111" }}>
+                {product.price}
+              </span>
             </div>
-          ))}
-        </div>
 
-        {/* RIGHT — sticky panel */}
-        <div
-          className="w-[42%] sticky top-0 h-screen flex flex-col px-14 py-14 overflow-y-auto"
-          style={{ borderLeft: "1px solid #e8e8e8" }}
-        >
-          {/* BACK */}
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 mb-10 w-fit transition-colors duration-200"
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#1a1a1a")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa")}
-          >
-            <ArrowLeft size={14} />
-            <span className="text-[11px] uppercase tracking-[0.12em]">Back</span>
-          </button>
-
-          {/* TITLE + PRICE */}
-          <div className="flex items-start justify-between gap-6 mb-6">
-            <h1
-              className="text-[16px] font-semibold uppercase tracking-[0.02em] leading-snug"
-              style={{ color: "#111" }}
+            {/* DESCRIPTION */}
+            <p
+              className="leading-relaxed mb-8"
+              style={{ fontSize: "13px", color: "#555", fontWeight: 400, lineHeight: 1.75 }}
             >
-              {product.title}
-            </h1>
-            <span className="text-[16px] font-semibold whitespace-nowrap" style={{ color: "#111" }}>
-              {product.price}
-            </span>
-          </div>
+              {product.description}
+            </p>
 
-          {/* DESCRIPTION */}
-          <p
-            className="leading-relaxed mb-8"
-            style={{ fontSize: "13px", color: "#555", fontWeight: 400, lineHeight: 1.75 }}
-          >
-            {product.description}
-          </p>
+            {/* DIVIDER */}
+            <div style={{ borderTop: "1px solid #e8e8e8" }} />
 
-          {/* DIVIDER */}
-          <div style={{ borderTop: "1px solid #e8e8e8" }} />
-
-          {/* ACCORDIONS */}
-          <div>
-            <button
-              className="w-full flex items-center justify-between py-5"
-              style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
-              onClick={() => setDetailsOpen(!detailsOpen)}
-            >
-              <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
-                Garment Details
-              </span>
-              <Plus size={16} style={{ color: "#111", transform: detailsOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
-            </button>
-            {detailsOpen && (
-              <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
-                {product.details.map((d, i) => (
-                  <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>— {d}</p>
-                ))}
-              </div>
-            )}
-
-            <button
-              className="w-full flex items-center justify-between py-5"
-              style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
-              onClick={() => setWashOpen(!washOpen)}
-            >
-              <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
-                Wash Care
-              </span>
-              <Plus size={16} style={{ color: "#111", transform: washOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
-            </button>
-            {washOpen && (
-              <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
-                {product.washCare.map((w, i) => (
-                  <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>— {w}</p>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* SPACER */}
-          <div className="flex-1" />
-
-          {/* SIZE + ADD TO CART */}
-          <div className="flex flex-col gap-3">
+            {/* ACCORDIONS */}
             <div>
               <button
-                className="w-full flex items-center justify-between px-5 h-[48px]"
-                style={{ border: "1px solid #e8e8e8", background: "#f5f5f5", cursor: "pointer" }}
-                onClick={() => setSizeOpen(!sizeOpen)}
+                className="w-full flex items-center justify-between py-5"
+                style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
+                onClick={() => setDetailsOpen(!detailsOpen)}
               >
                 <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
-                  {selectedSize ? `Size: ${selectedSize}` : "Select Size"}
+                  Garment Details
                 </span>
-                <Plus size={14} style={{ color: "#111", transform: sizeOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }} />
+                <Plus
+                  size={16}
+                  style={{
+                    color: "#111",
+                    transform: detailsOpen ? "rotate(45deg)" : "rotate(0deg)",
+                    transition: "transform 0.25s ease",
+                    flexShrink: 0,
+                  }}
+                />
               </button>
+              {detailsOpen && (
+                <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
+                  {product.details.map((d, i) => (
+                    <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>
+                      — {d}
+                    </p>
+                  ))}
+                </div>
+              )}
 
-              {sizeOpen && (
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {sizes.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => { setSelectedSize(s); setSizeOpen(false); }}
-                      className="w-12 h-10 text-[12px] font-semibold uppercase transition-all duration-200"
-                      style={{
-                        border: selectedSize === s ? "1px solid #111" : "1px solid #e8e8e8",
-                        background: selectedSize === s ? "#111" : "transparent",
-                        color: selectedSize === s ? "#fff" : "#555",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {s}
-                    </button>
+              <button
+                className="w-full flex items-center justify-between py-5"
+                style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
+                onClick={() => setWashOpen(!washOpen)}
+              >
+                <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
+                  Wash Care
+                </span>
+                <Plus
+                  size={16}
+                  style={{
+                    color: "#111",
+                    transform: washOpen ? "rotate(45deg)" : "rotate(0deg)",
+                    transition: "transform 0.25s ease",
+                    flexShrink: 0,
+                  }}
+                />
+              </button>
+              {washOpen && (
+                <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
+                  {product.washCare.map((w, i) => (
+                    <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>
+                      — {w}
+                    </p>
                   ))}
                 </div>
               )}
             </div>
 
-            <button
-              className="w-full h-[52px] text-[13px] font-semibold uppercase tracking-[0.12em] hover:opacity-80 transition-opacity duration-200"
-              style={{ background: "#111", color: "#fff", border: "none", cursor: "pointer" }}
-            >
-              Add to Cart
-            </button>
+            {/* SPACER — only meaningful on desktop sticky panel */}
+            <div className="hidden lg:flex flex-1" />
+
+            {/* SIZE + ADD TO CART */}
+            {/* On mobile: normal flow with top margin; on desktop: pushed to bottom */}
+            <div className="flex flex-col gap-3 mt-8 lg:mt-0">
+              <div>
+                <button
+                  className="w-full flex items-center justify-between px-5 h-[48px]"
+                  style={{ border: "1px solid #e8e8e8", background: "#f5f5f5", cursor: "pointer" }}
+                  onClick={() => setSizeOpen(!sizeOpen)}
+                >
+                  <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
+                    {selectedSize ? `Size: ${selectedSize}` : "Select Size"}
+                  </span>
+                  <Plus
+                    size={14}
+                    style={{
+                      color: "#111",
+                      transform: sizeOpen ? "rotate(45deg)" : "rotate(0deg)",
+                      transition: "transform 0.25s ease",
+                    }}
+                  />
+                </button>
+
+                {sizeOpen && (
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    {sizes.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => {
+                          setSelectedSize(s);
+                          setSizeOpen(false);
+                        }}
+                        className="w-12 h-10 text-[12px] font-semibold uppercase transition-all duration-200"
+                        style={{
+                          border: selectedSize === s ? "1px solid #111" : "1px solid #e8e8e8",
+                          background: selectedSize === s ? "#111" : "transparent",
+                          color: selectedSize === s ? "#fff" : "#555",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <button
+                className="w-full h-[52px] text-[13px] font-semibold uppercase tracking-[0.12em] hover:opacity-80 transition-opacity duration-200"
+                style={{ background: "#111", color: "#fff", border: "none", cursor: "pointer" }}
+              >
+                Add to Cart
+              </button>
+
+              {/* Safe area spacer for mobile bottom */}
+              <div className="h-4 lg:hidden" />
+            </div>
           </div>
-
         </div>
-      </div>
-    </section>
+      </section>
     </SmoothScroll>
-
   );
 }
