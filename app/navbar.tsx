@@ -2,700 +2,820 @@
 
 import { useState, useRef, useEffect } from "react";
 import gsap from "gsap";
+import { useRouter } from "next/navigation";
 import Card from "@/component/card";
-import { ArrowRight, Menu, X, Search, ShoppingBag } from "lucide-react";
+import { ShoppingBag, Search, X, ArrowUpRight, Menu } from "lucide-react";
+
+const NAV_LINKS = [
+  { label: "Shop", key: "shop" as const },
+  { label: "Explore", key: "explore" as const },
+];
+
+const SHOP_CATEGORIES = [
+  { label: "Caps", href: "/shop?category=caps" },
+  { label: "Tees", href: "/shop?category=tees" },
+  { label: "Jackets", href: "/shop?category=jackets" },
+  { label: "Bottoms", href: "/shop?category=bottoms" },
+  { label: "Accessories", href: "/shop?category=accessories" },
+  { label: "All Products", href: "/shop" },
+];
+
+const EXPLORE_LINKS = [
+  { label: "Our Story", href: "/story" },
+  { label: "Journal", href: "/journal" },
+  { label: "FAQs", href: "/faqs" },
+];
+
+const cardData = [
+  {
+    section: "Go with the Flow Dresses",
+    description: "Effortless styling for everyday comfort and movement.",
+    productImage: "/women.jpg",
+    buttonText: "SHOP DRESSES",
+  },
+  {
+    section: "Airy 100% Organic Cotton",
+    description: "Lightweight summer essentials inspired by coastal living.",
+    productImage: "/men.jpg",
+    buttonText: "SHOP HOLLY",
+  },
+  {
+    section: "Modern Accessories",
+    description: "Minimal pieces designed to complete your look.",
+    productImage: "/accessories.jpg",
+    buttonText: "SHOP ACCESSORIES",
+  },
+];
 
 export default function NavBar() {
+  const router = useRouter();
+
   const [activeMenu, setActiveMenu] = useState<"shop" | "explore" | null>(null);
-  const [renderedMenu, setRenderedMenu] = useState<"shop" | "explore" | null>(
-    null
-  );
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileSubMenu, setMobileSubMenu] = useState<"shop" | "explore" | null>(
-    null
-  );
+  const [renderedMenu, setRenderedMenu] = useState<"shop" | "explore" | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [mobileSubmenu, setMobileSubmenu] = useState<"shop" | "explore" | null>(null);
+  const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const megaRef = useRef<HTMLDivElement>(null);
-  const navBgRef = useRef<HTMLDivElement>(null);
-  const navWrapRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const bgAnimRef = useRef<gsap.core.Tween | null>(null);
-  const menuAnimRef = useRef<gsap.core.Tween | null>(null);
-  const isAnimatingOut = useRef(false);
-  const lastScrollY = useRef(0);
-  const navVisible = useRef(true);
-  const [navHovered, setNavHovered] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
+  const lineRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastY = useRef(0);
+  const animOut = useRef(false);
+  const menuAnim = useRef<gsap.core.Tween | null>(null);
 
-  // Detect mobile screen
+  // Scroll behaviour
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 60);
+      const delta = y - lastY.current;
+      if (delta > 6 && y > 120 && !mobileOpen) setHidden(true);
+      else if (delta < -6) setHidden(false);
+      lastY.current = y;
     };
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [mobileOpen]);
 
-  // Close mobile menu when resizing to desktop
+  // Animate nav hide/show
   useEffect(() => {
-    if (!isMobile && mobileMenuOpen) {
-      setMobileMenuOpen(false);
-      setMobileSubMenu(null);
-      document.body.style.overflow = "";
-    }
-  }, [isMobile, mobileMenuOpen]);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!navWrapRef.current || !navBgRef.current) return;
-      if (mobileMenuOpen) return;
-
-      const currentY = window.scrollY;
-      const delta = currentY - lastScrollY.current;
-      const scrolledPast = currentY > 80;
-
-      if (delta > 4 && scrolledPast && navVisible.current) {
-        navVisible.current = false;
-        gsap.to(navWrapRef.current, {
-          y: "-100%",
-          duration: 0.4,
-          ease: "power3.in",
-        });
-      } else if (delta < -4 && !navVisible.current) {
-        navVisible.current = true;
-        gsap.to(navWrapRef.current, {
-          y: "0%",
-          duration: 0.5,
-          ease: "expo.out",
-        });
-      }
-
-      if (!activeMenu && !mobileSubMenu) {
-        if (bgAnimRef.current) bgAnimRef.current.kill();
-        bgAnimRef.current = gsap.to(navBgRef.current, {
-          backgroundColor: scrolledPast ? "#faf8f5" : "rgba(250,248,245,0)",
-          backdropFilter: scrolledPast ? "blur(16px)" : "blur(0px)",
-          duration: 0.4,
-          ease: "power2.out",
-        });
-      }
-
-      lastScrollY.current = currentY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeMenu, mobileMenuOpen, mobileSubMenu]);
-
-  useEffect(() => {
-    if (!navBgRef.current) return;
-    if (bgAnimRef.current) bgAnimRef.current.kill();
-
-    const isActive = activeMenu || mobileSubMenu;
-    bgAnimRef.current = gsap.to(navBgRef.current, {
-      backgroundColor: isActive ? "#faf8f5" : "rgba(250,248,245,0)",
-      backdropFilter: isActive ? "blur(16px)" : "blur(0px)",
-      duration: isActive ? 0.35 : 0.45,
-      ease: isActive ? "expo.out" : "expo.inOut",
+    if (!navRef.current) return;
+    gsap.to(navRef.current, {
+      y: hidden ? "-100%" : "0%",
+      duration: hidden ? 0.35 : 0.5,
+      ease: hidden ? "power3.in" : "expo.out",
     });
-  }, [activeMenu, mobileSubMenu]);
+  }, [hidden]);
 
-  // Desktop mega menu animation
+  // Mega menu animation
   useEffect(() => {
-    if (isMobile) return;
     if (!megaRef.current) return;
-    if (menuAnimRef.current) menuAnimRef.current.kill();
+    if (menuAnim.current) menuAnim.current.kill();
 
     if (activeMenu) {
-      isAnimatingOut.current = false;
+      animOut.current = false;
       setRenderedMenu(activeMenu);
-
-      gsap.set(megaRef.current, {
-        visibility: "visible",
-        clipPath: "inset(0% 0% 100% 0%)",
-        opacity: 1,
-        transformOrigin: "top center",
-      });
-
-      menuAnimRef.current = gsap.to(megaRef.current, {
+      gsap.set(megaRef.current, { visibility: "visible", clipPath: "inset(0% 0% 100% 0%)" });
+      menuAnim.current = gsap.to(megaRef.current, {
         clipPath: "inset(0% 0% 0% 0%)",
-        duration: 0.55,
+        duration: 0.52,
         ease: "expo.out",
         overwrite: true,
       });
     } else {
-      isAnimatingOut.current = true;
-
-      menuAnimRef.current = gsap.to(megaRef.current, {
+      animOut.current = true;
+      menuAnim.current = gsap.to(megaRef.current, {
         clipPath: "inset(0% 0% 100% 0%)",
-        duration: 0.38,
+        duration: 0.36,
         ease: "expo.inOut",
         overwrite: true,
         onComplete: () => {
-          if (!isAnimatingOut.current) return;
+          if (!animOut.current) return;
           gsap.set(megaRef.current!, { visibility: "hidden" });
           setRenderedMenu(null);
         },
       });
     }
-  }, [activeMenu, isMobile]);
+  }, [activeMenu]);
 
+  // Body scroll lock for mobile
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (bgAnimRef.current) bgAnimRef.current.kill();
-      if (menuAnimRef.current) menuAnimRef.current.kill();
-    };
-  }, []);
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  // Cleanup timers
+  useEffect(() => () => { if (closeTimer.current) clearTimeout(closeTimer.current); }, []);
 
   const clearClose = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
   };
-
   const scheduleClose = () => {
-    if (isMobile) return;
     clearClose();
-    timeoutRef.current = setTimeout(() => {
-      setActiveMenu(null);
-      timeoutRef.current = null;
-    }, 180);
+    closeTimer.current = setTimeout(() => setActiveMenu(null), 180);
   };
+  const enterMenu = (key: "shop" | "explore") => { clearClose(); setActiveMenu(key); };
 
-  const handleMenuEnter = (menu: "shop" | "explore") => {
-    if (isMobile) return;
-    clearClose();
-    setActiveMenu(menu);
-  };
-
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
-    if (!mobileMenuOpen) {
-      setActiveMenu(null);
-      setMobileSubMenu(null);
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-  };
-
-  const openMobileSubMenu = (menu: "shop" | "explore") => {
-    setMobileSubMenu(menu);
-  };
-
-  const closeMobileSubMenu = () => {
-    setMobileSubMenu(null);
-  };
-
-  const closeMobileMenu = () => {
-    setMobileMenuOpen(false);
-    setMobileSubMenu(null);
-    document.body.style.overflow = "";
-  };
-
-  const cardData = [
-    {
-      section: "Go with the Flow Dresses",
-      description: "Effortless styling for everyday comfort and movement.",
-      productImage: "/women.jpg",
-      buttonText: "SHOP DRESSES",
-    },
-    {
-      section: "Airy 100% Organic Cotton",
-      description: "Lightweight summer essentials inspired by coastal living.",
-      productImage: "/men.jpg",
-      buttonText: "SHOP HOLLY",
-    },
-    {
-      section: "Modern Accessories",
-      description: "Minimal pieces designed to complete your look.",
-      productImage: "/accessories.jpg",
-      buttonText: "SHOP ACCESSORIES",
-    },
-  ];
-
-  const isNavDark =
-    renderedMenu || mobileSubMenu || (isMobile && mobileMenuOpen);
+  // Even when scrolled, keep dark text on light background
+  // Only on hero (not scrolled, no menu open) should text be white
+  const isDark = !!(renderedMenu || mobileOpen || scrolled);
+  const navBg = isDark
+    ? "rgba(250,248,245,1)"
+    : "rgba(250,248,245,0)";
+  const borderColor = isDark
+    ? "rgba(0,0,0,0.07)"
+    : "rgba(255,255,255,0.2)";
+  const textColor = isDark ? "#111" : "#fff";
 
   return (
     <>
+      {/* ── NAV WRAPPER ── */}
       <div
-        ref={navWrapRef}
-        className="w-full z-50 fixed top-0 left-0"
-        style={{ willChange: "transform" }}
+        ref={navRef}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          zIndex: 100,
+          willChange: "transform",
+        }}
         onMouseLeave={scheduleClose}
       >
-        {/* NAVBAR */}
+        {/* ── NAV BAR ── */}
         <div
-          ref={navBgRef}
           style={{
-            backgroundColor: isMobile ? "#faf8f5" : "rgba(250,248,245,0)",
-            backdropFilter: isMobile ? "blur(16px)" : "blur(0px)",
-            WebkitBackdropFilter: isMobile ? "blur(16px)" : "blur(0px)",
-            borderBottom: isMobile
-              ? "1px solid #ece7df"
-              : "1px solid rgba(236,231,223,0)",
+            background: navBg,
+            backdropFilter: scrolled || isDark ? "blur(20px)" : "none",
+            WebkitBackdropFilter: scrolled || isDark ? "blur(20px)" : "none",
+            borderBottom: `1px solid ${borderColor}`,
+            transition: "background 0.4s ease, border-color 0.4s ease",
             position: "relative",
             zIndex: 10,
           }}
         >
-          <div className="w-full px-4 md:px-8">
-            <div className="relative flex items-center h-[60px] md:h-[72px]">
-              {/* Mobile Menu Button */}
-              <button
-                onClick={toggleMobileMenu}
-                className="md:hidden flex items-center justify-center w-8 h-8"
-                style={{ color: isNavDark ? "#2f2a26" : "#ffffff" }}
-              >
-                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
-
-              {/* DESKTOP NAV LINKS */}
-              <div
-                className="hidden md:flex items-center gap-6 lg:gap-10 flex-1"
-                onMouseEnter={() => setNavHovered(true)}
-                onMouseLeave={() => setNavHovered(false)}
-              >
-                {(["shop", "explore"] as const).map((item) => (
-                  <button
-                    key={item}
-                    onMouseEnter={() => handleMenuEnter(item)}
-                    style={{
-                      color: renderedMenu ? "#2f2a26" : "#ffffff",
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: "18px",
-                      fontWeight: 500,
-                      letterSpacing: "0.025em",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "5px",
-                      padding: 0,
-                      transition: "color 0.3s ease, font-weight 0.3s ease",
-                    }}
-                  >
-                    {item}
-                    <svg
-                      width="10"
-                      height="10"
-                      viewBox="0 0 10 10"
-                      fill="none"
-                      style={{
-                        transform:
-                          activeMenu === item
-                            ? "rotate(180deg)"
-                            : "rotate(0deg)",
-                        transition:
-                          "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-                      }}
-                    >
-                      <path
-                        d="M2 3.5L5 6.5L8 3.5"
-                        stroke="currentColor"
-                        strokeWidth="1.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                ))}
-
+          <div
+            style={{
+              maxWidth: 1400,
+              margin: "0 auto",
+              padding: "0 20px sm:px-32",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              height: 68,
+              gap: 0,
+            }}
+          >
+            {/* LEFT — desktop links - now visible on all screens */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 24,
+                flex: 1,
+              }}
+            >
+              {NAV_LINKS.map(({ label, key }) => (
                 <button
-                  onMouseEnter={(e) => {
-                    clearClose();
-                    setActiveMenu(null);
+                  key={key}
+                  onMouseEnter={() => enterMenu(key)}
+                  onClick={() => {
+                    // For mobile, handle click differently
+                    if (window.innerWidth < 768) {
+                      setMobileOpen(true);
+                      setMobileSubmenu(key);
+                    }
                   }}
                   style={{
-                    color: renderedMenu ? "#2f2a26" : "#ffffff",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    fontSize: "18px",
-                    fontWeight: 500,
-                    letterSpacing: "0.025em",
-                    padding: 0,
-                    transition: "color 0.3s ease",
+                    padding: "4px 0",
+                    fontSize: 12,
+                    fontWeight: 400,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: textColor,
+                    transition: "color 0.3s ease, opacity 0.3s ease",
+                    opacity: activeMenu && activeMenu !== key ? 0.4 : 1,
+                    position: "relative",
+                    fontFamily: "inherit",
                   }}
                 >
-                  subscribe
+                  {label}
+                  <span
+                    style={{
+                      position: "absolute",
+                      bottom: -1,
+                      left: 0,
+                      width: activeMenu === key ? "100%" : "0%",
+                      height: 1.5,
+                      background: textColor,
+                      transition: "width 0.3s ease",
+                    }}
+                  />
                 </button>
-              </div>
+              ))}
 
-              {/* LOGO */}
-              <span
-                className="absolute left-1/2 -translate-x-1/2 font-bold tracking-tight cursor-pointer whitespace-nowrap"
+              <button
+                onMouseEnter={() => { clearClose(); setActiveMenu(null); }}
                 style={{
-                  color: isNavDark ? "#2f2a26" : "#ffffff",
-                  transition: "color 0.3s ease",
-                  fontFamily: "Telma",
-                  fontSize: "50px",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "4px 0",
+                  fontSize: 12,
+                  fontWeight: 400,
+                  letterSpacing: "0.15em",
+                  textTransform: "uppercase",
+                  color: textColor,
+                  transition: "color 0.3s ease, opacity 0.3s ease",
+                  opacity: activeMenu ? 0.4 : 1,
+                  fontFamily: "inherit",
                 }}
               >
-                Cloto
-              </span>
+                Subscribe
+              </button>
+            </div>
 
-              {/* ICONS */}
-              <div className="flex items-center gap-2 ml-auto">
-                <button
-                  className="w-[30px] h-[30px] md:w-[34px] md:h-[34px] rounded-full flex items-center justify-center"
+            {/* CENTRE — logo */}
+            <button
+              onClick={() => router.push("/")}
+              style={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+                lineHeight: 1,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: 24,
+                  fontWeight: 300,
+                  letterSpacing: "0.22em",
+                  textTransform: "uppercase",
+                  color: textColor,
+                  transition: "color 0.3s ease",
+                }}
+              >
+                CLOTO
+              </span>
+            </button>
+
+            {/* RIGHT — icons + mobile hamburger */}
+            <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
+              {/* Search */}
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  width: 38,
+                  height: 38,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: textColor,
+                  transition: "color 0.3s ease, opacity 0.2s",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.6")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+              >
+                <Search size={16} strokeWidth={1.5} />
+              </button>
+
+              {/* Cart */}
+              <button
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  width: 38,
+                  height: 38,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: textColor,
+                  transition: "color 0.3s ease, opacity 0.2s",
+                  position: "relative",
+                  borderRadius: "50%",
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.6")}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+              >
+                <ShoppingBag size={16} strokeWidth={1.5} />
+                <span
                   style={{
-                    border: "1px solid rgba(221,216,208,0.6)",
-                    background: "transparent",
-                    cursor: "pointer",
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    width: 4,
+                    height: 4,
+                    borderRadius: "50%",
+                    background: textColor === "#fff" ? "#fff" : "#111",
+                    opacity: 0.8,
                   }}
-                >
-                  <Search
-                    size={14}
-                    stroke={isNavDark ? "#2f2a26" : "#ffffff"}
-                    strokeWidth={1.8}
-                  />
-                </button>
-                <button
-                  className="w-[30px] h-[30px] md:w-[34px] md:h-[34px] rounded-full flex items-center justify-center"
-                  style={{
-                    border: "1px solid rgba(221,216,208,0.6)",
-                    background: "transparent",
-                    cursor: "pointer",
-                  }}
-                >
-                  <ShoppingBag
-                    size={14}
-                    stroke={isNavDark ? "#2f2a26" : "#ffffff"}
-                    strokeWidth={1.8}
-                  />
-                </button>
-              </div>
+                />
+              </button>
+
+              {/* Mobile hamburger - hide on larger screens */}
+              <button
+                className="md:hidden"
+                onClick={() => {
+                  setMobileOpen(!mobileOpen);
+                  setMobileSubmenu(null);
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  width: 38,
+                  height: 38,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginLeft: 4,
+                  color: textColor,
+                  borderRadius: "50%",
+                }}
+              >
+                {mobileOpen ? (
+                  <X size={18} strokeWidth={1.5} />
+                ) : (
+                  <Menu size={18} strokeWidth={1.5} />
+                )}
+              </button>
             </div>
           </div>
-        </div>
 
-        {/* DESKTOP MEGA MENU */}
-        {!isMobile && (
+          {/* thin accent line below logo - removed for cleaner look */}
           <div
-            ref={megaRef}
+            ref={lineRef}
             style={{
               position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              visibility: "hidden",
-              clipPath: "inset(0% 0% 100% 0%)",
-              background: "#faf8f5",
-              borderBottom: "1px solid #ece7df",
-              boxShadow: "0 24px 48px -12px rgba(0,0,0,0.08)",
-              borderBottomLeftRadius: "24px",
-              borderBottomRightRadius: "24px",
-              overflow: "hidden",
-              zIndex: 5,
-              paddingTop: "72px",
+              bottom: 0,
+              left: "50%",
+              transform: "translateX(-50%)",
+              width: 0,
+              height: 0,
+              background: "rgba(255,255,255,0.3)",
             }}
-            onMouseEnter={clearClose}
-            onMouseLeave={scheduleClose}
-          >
-            {renderedMenu === "shop" && (
-              <div className="max-w-8xl mx-auto px-8 py-8">
-                <div className="flex items-center justify-between mb-8">
-                  <h2
-                    className="font-semibold"
-                    style={{
-                      color: "#1a1a1a",
-                      fontFamily: "Georgia, serif",
-                      fontSize: "28px",
-                    }}
-                  >
-                    Choose your mood
-                  </h2>
-                  <button
-                    className="flex items-center gap-3 px-7 py-[14px] text-[13px] uppercase tracking-[0.12em] font-medium transition-all duration-300 hover:gap-5"
-                    style={{
-                      background: "#1a1a1a",
-                      color: "#ffffff",
-                      borderRadius: "100px",
-                    }}
-                  >
-                    View All
-                    <ArrowRight size={15} />
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  {cardData.map((card, index) => (
-                    <Card key={index} {...card} />
+          />
+        </div>
+
+        {/* ── DESKTOP MEGA MENU (hidden on mobile) ── */}
+        <div
+          ref={megaRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            visibility: "hidden",
+            clipPath: "inset(0% 0% 100% 0%)",
+            background: "#faf8f5",
+            borderBottom: "1px solid rgba(0,0,0,0.06)",
+            zIndex: 5,
+            paddingTop: 68,
+          }}
+          className="hidden md:block"
+          onMouseEnter={clearClose}
+          onMouseLeave={scheduleClose}
+        >
+          {/* SHOP panel */}
+          {renderedMenu === "shop" && (
+            <div
+              style={{
+                maxWidth: 1400,
+                margin: "0 auto",
+                padding: "52px 32px 48px",
+                display: "grid",
+                gridTemplateColumns: "200px 1fr",
+                gap: 64,
+                alignItems: "start",
+              }}
+            >
+              <div>
+                <p
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "#aaa",
+                    marginBottom: 20,
+                    fontWeight: 500,
+                  }}
+                >
+                  Browse
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                  {SHOP_CATEGORIES.map(({ label, href }) => (
+                    <button
+                      key={label}
+                      onClick={() => { router.push(href); setActiveMenu(null); }}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
+                        textAlign: "left",
+                        padding: "8px 0",
+                        fontSize: 20,
+                        fontWeight: 400,
+                        fontFamily: "'Cormorant Garamond', Georgia, serif",
+                        color: "#111",
+                        letterSpacing: "0.01em",
+                        transition: "opacity 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        lineHeight: 1.2,
+                      }}
+                      onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.opacity = "0.5";
+                      }}
+                      onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLButtonElement).style.opacity = "1";
+                      }}
+                    >
+                      {label}
+                    </button>
                   ))}
                 </div>
               </div>
-            )}
 
-            {renderedMenu === "explore" && (
-              <div className="max-w-8xl mx-auto px-8 py-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-                <div className="flex flex-col gap-0 min-w-[130px]">
-                  {["our story", "learn", "faqs"].map((link) => (
-                    <span
-                      key={link}
-                      className="font-bold cursor-pointer leading-tight"
-                      style={{
-                        fontSize: "42px",
-                        color: "#1a1a1a",
-                        fontFamily: "Georgia, serif",
-                        transition: "color 0.3s ease",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.color = "#c8c2ba")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.color = "#1a1a1a")
-                      }
-                    >
-                      {link}
-                    </span>
-                  ))}
-                </div>
-
+              <div>
                 <div
                   style={{
-                    width: "1px",
-                    background: "#ece7df",
-                    height: "auto",
-                    alignSelf: "stretch",
-                    flexShrink: 0,
-                    margin: "0 40px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 24,
                   }}
-                  className="hidden md:block"
-                />
+                >
+                  <p
+                    style={{
+                      fontSize: 10,
+                      letterSpacing: "0.18em",
+                      textTransform: "uppercase",
+                      color: "#aaa",
+                      fontWeight: 500,
+                    }}
+                  >
+                    Featured
+                  </p>
+                  <button
+                    onClick={() => { router.push("/shop"); setActiveMenu(null); }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
+                      color: "#111",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      fontWeight: 500,
+                      transition: "opacity 0.2s",
+                    }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.5")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                  >
+                    View all <ArrowUpRight size={12} />
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                  {cardData.map((card, i) => (
+                    <Card key={i} {...card} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
-                <div className="flex gap-6 flex-1 flex-col md:flex-row">
+          {/* EXPLORE panel */}
+          {renderedMenu === "explore" && (
+            <div
+              style={{
+                maxWidth: 1400,
+                margin: "0 auto",
+                padding: "52px 32px 48px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: 80,
+                alignItems: "start",
+              }}
+            >
+              <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                <p
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "#aaa",
+                    marginBottom: 20,
+                    fontWeight: 500,
+                  }}
+                >
+                  Company
+                </p>
+                {EXPLORE_LINKS.map(({ label, href }) => (
+                  <button
+                    key={label}
+                    onClick={() => { router.push(href); setActiveMenu(null); }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      padding: "8px 0",
+                      fontSize: 32,
+                      fontWeight: 400,
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      color: "#111",
+                      letterSpacing: "0.01em",
+                      transition: "opacity 0.2s",
+                      lineHeight: 1.15,
+                    }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.4")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <p
+                  style={{
+                    fontSize: 10,
+                    letterSpacing: "0.18em",
+                    textTransform: "uppercase",
+                    color: "#aaa",
+                    marginBottom: 20,
+                    fontWeight: 500,
+                  }}
+                >
+                  Latest
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                   {[
                     {
-                      gradient:
-                        "linear-gradient(135deg, #e07030 0%, #c04010 100%)",
-                      title:
-                        "Discover timeless styles crafted for effortless everyday wear.",
+                      bg: "linear-gradient(145deg, #c8b99a 0%, #a8927a 100%)",
+                      label: "SS25 Collection",
+                      sub: "Timeless styles for the season",
                     },
                     {
-                      gradient:
-                        "linear-gradient(135deg, #e89050 0%, #d06020 100%)",
-                      title:
-                        "Explore breathable essentials designed for comfort and modern living.",
+                      bg: "linear-gradient(145deg, #b8c4b0 0%, #8a9e80 100%)",
+                      label: "Sustainable Fabrics",
+                      sub: "100% organic cotton from field to closet",
                     },
-                  ].map(({ gradient, title }, i) => (
+                  ].map(({ bg, label, sub }, i) => (
                     <div
                       key={i}
-                      className="cursor-pointer flex-1 max-w-[300px]"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => { router.push("/journal"); setActiveMenu(null); }}
+                      onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.opacity = "0.8")}
+                      onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.opacity = "1")}
                     >
                       <div
-                        className="w-full h-[180px] mb-4"
                         style={{
-                          background: gradient,
-                          borderRadius: "16px",
-                          transition: "opacity 0.35s ease",
+                          width: "100%",
+                          height: 160,
+                          background: bg,
+                          marginBottom: 14,
+                          borderRadius: 2,
                         }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.opacity = "0.8")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.opacity = "1")
-                        }
                       />
-                      <p
-                        className="text-[14px] leading-snug"
-                        style={{
-                          color: "#3a3530",
-                          textDecoration: "underline",
-                          textUnderlineOffset: "3px",
-                          textDecorationColor: "#c8c2ba",
-                          transition: "color 0.3s ease",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.color = "#8a847c")
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.color = "#3a3530")
-                        }
-                      >
-                        {title}
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 4, letterSpacing: "0.01em" }}>
+                        {label}
+                      </p>
+                      <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, letterSpacing: "0.02em" }}>
+                        {sub}
                       </p>
                     </div>
                   ))}
                 </div>
               </div>
-            )}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* MOBILE MENU OVERLAY */}
-      {isMobile && mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          style={{
-            background: "#faf8f5",
-            top: "60px",
-            overflowY: "auto",
-          }}
-        >
-          <div className="px-6 py-8">
-            {!mobileSubMenu ? (
-              // Main mobile menu
-              <div className="flex flex-col gap-8">
-                <button
-                  onClick={() => openMobileSubMenu("shop")}
-                  className="flex items-center justify-between py-4 border-b border-[#ece7df]"
+      {/* ── MOBILE MENU (for when hamburger is clicked) ── */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          top: 68,
+          background: "#faf8f5",
+          zIndex: 90,
+          overflowY: "auto",
+          transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+        className="md:hidden"
+      >
+        <div style={{ padding: "32px 24px 60px" }}>
+
+          {/* Main links */}
+          <div
+            style={{
+              transform: mobileSubmenu ? "translateX(-100%)" : "translateX(0)",
+              transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+              position: "absolute",
+              left: 0,
+              right: 0,
+              padding: "32px 24px",
+            }}
+          >
+            {NAV_LINKS.map(({ label, key }) => (
+              <button
+                key={key}
+                onClick={() => setMobileSubmenu(key)}
+                style={{
+                  width: "100%",
+                  background: "none",
+                  border: "none",
+                  borderBottom: "1px solid rgba(0,0,0,0.07)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "18px 0",
+                  textAlign: "left",
+                  fontFamily: "'Cormorant Garamond', Georgia, serif",
+                  fontSize: 28,
+                  fontWeight: 400,
+                  color: "#111",
+                  letterSpacing: "0.01em",
+                }}
+              >
+                {label}
+                <ArrowUpRight size={18} style={{ color: "#aaa", flexShrink: 0 }} />
+              </button>
+            ))}
+            <button
+              style={{
+                width: "100%",
+                background: "none",
+                border: "none",
+                borderBottom: "1px solid rgba(0,0,0,0.07)",
+                cursor: "pointer",
+                padding: "18px 0",
+                textAlign: "left",
+                fontFamily: "'Cormorant Garamond', Georgia, serif",
+                fontSize: 28,
+                fontWeight: 400,
+                color: "#111",
+              }}
+            >
+              Subscribe
+            </button>
+
+            <div style={{ marginTop: 48, display: "flex", gap: 28 }}>
+              {["Instagram", "Twitter", "TikTok"].map((s) => (
+                <span
+                  key={s}
                   style={{
-                    fontSize: "24px",
-                    fontFamily: "Georgia, serif",
-                    color: "#1a1a1a",
+                    fontSize: 11,
+                    letterSpacing: "0.12em",
+                    textTransform: "uppercase",
+                    color: "#aaa",
+                    cursor: "pointer",
+                    fontWeight: 500,
                   }}
                 >
-                  Shop
-                  <ArrowRight size={20} />
-                </button>
-                <button
-                  onClick={() => openMobileSubMenu("explore")}
-                  className="flex items-center justify-between py-4 border-b border-[#ece7df]"
-                  style={{
-                    fontSize: "24px",
-                    fontFamily: "Georgia, serif",
-                    color: "#1a1a1a",
-                  }}
-                >
-                  Explore
-                  <ArrowRight size={20} />
-                </button>
-                <button
-                  className="py-4 text-left border-b border-[#ece7df]"
-                  style={{
-                    fontSize: "24px",
-                    fontFamily: "Georgia, serif",
-                    color: "#1a1a1a",
-                  }}
-                  onClick={closeMobileMenu}
-                >
-                  Subscribe
-                </button>
-              </div>
-            ) : (
-              // Submenu
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Submenu */}
+          <div
+            style={{
+              transform: mobileSubmenu ? "translateX(0)" : "translateX(100%)",
+              transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
+              position: "absolute",
+              left: 0,
+              right: 0,
+              padding: "32px 24px",
+            }}
+          >
+            <button
+              onClick={() => setMobileSubmenu(null)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 11,
+                letterSpacing: "0.12em",
+                textTransform: "uppercase",
+                color: "#aaa",
+                marginBottom: 32,
+                fontWeight: 500,
+                padding: 0,
+              }}
+            >
+              ← Back
+            </button>
+
+            {mobileSubmenu === "shop" && (
               <div>
-                <button
-                  onClick={closeMobileSubMenu}
-                  className="flex items-center gap-2 mb-6 text-[#8a847c] hover:text-[#1a1a1a] transition"
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
+                {SHOP_CATEGORIES.map(({ label, href }) => (
+                  <button
+                    key={label}
+                    onClick={() => { router.push(href); setMobileOpen(false); setMobileSubmenu(null); }}
+                    style={{
+                      width: "100%",
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid rgba(0,0,0,0.06)",
+                      cursor: "pointer",
+                      padding: "16px 0",
+                      textAlign: "left",
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontSize: 24,
+                      fontWeight: 400,
+                      color: "#111",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
                   >
-                    <path d="M15 18l-6-6 6-6" strokeWidth="2" />
-                  </svg>
-                  Back
-                </button>
+                    {label}
+                    <ArrowUpRight size={16} style={{ color: "#ccc" }} />
+                  </button>
+                ))}
+              </div>
+            )}
 
-                {mobileSubMenu === "shop" && (
-                  <div>
-                    <h2
-                      className="font-semibold mb-6"
-                      style={{
-                        color: "#1a1a1a",
-                        fontFamily: "Georgia, serif",
-                        fontSize: "24px",
-                      }}
-                    >
-                      Choose your mood
-                    </h2>
-                    <div className="flex flex-col gap-6">
-                      {cardData.map((card, index) => (
-                        <div key={index} className="mb-4">
-                          <Card {...card} />
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      className="flex items-center justify-center gap-2 w-full mt-8 px-6 py-3"
-                      style={{
-                        background: "#1a1a1a",
-                        color: "#fff",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        border: "none",
-                        cursor: "pointer",
-                        letterSpacing: "0.08em",
-                        borderRadius: "100px",
-                        textTransform: "uppercase",
-                      }}
-                    >
-                      view all
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                {mobileSubMenu === "explore" && (
-                  <div className="flex flex-col gap-8">
-                    <div className="flex flex-col gap-4">
-                      {["our story", "learn", "faqs"].map((link) => (
-                        <span
-                          key={link}
-                          className="font-bold cursor-pointer"
-                          style={{
-                            fontSize: "32px",
-                            color: "#1a1a1a",
-                            fontFamily: "Georgia, serif",
-                          }}
-                        >
-                          {link}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                      {[
-                        {
-                          gradient:
-                            "linear-gradient(135deg, #e07030 0%, #c04010 100%)",
-                          title:
-                            "Discover timeless styles crafted for effortless everyday wear.",
-                        },
-                        {
-                          gradient:
-                            "linear-gradient(135deg, #e89050 0%, #d06020 100%)",
-                          title:
-                            "Explore breathable essentials designed for comfort and modern living.",
-                        },
-                      ].map(({ gradient, title }, i) => (
-                        <div key={i} className="cursor-pointer">
-                          <div
-                            className="w-full h-[160px] mb-3"
-                            style={{
-                              background: gradient,
-                              borderRadius: "16px",
-                            }}
-                          />
-                          <p
-                            className="text-[14px] leading-snug"
-                            style={{
-                              color: "#3a3530",
-                              textDecoration: "underline",
-                              textUnderlineOffset: "3px",
-                              textDecorationColor: "#c8c2ba",
-                            }}
-                          >
-                            {title}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+            {mobileSubmenu === "explore" && (
+              <div>
+                {EXPLORE_LINKS.map(({ label, href }) => (
+                  <button
+                    key={label}
+                    onClick={() => { router.push(href); setMobileOpen(false); setMobileSubmenu(null); }}
+                    style={{
+                      width: "100%",
+                      background: "none",
+                      border: "none",
+                      borderBottom: "1px solid rgba(0,0,0,0.06)",
+                      cursor: "pointer",
+                      padding: "16px 0",
+                      textAlign: "left",
+                      fontFamily: "'Cormorant Garamond', Georgia, serif",
+                      fontSize: 24,
+                      fontWeight: 400,
+                      color: "#111",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    {label}
+                    <ArrowUpRight size={16} style={{ color: "#ccc" }} />
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
-      )}
+      </div>
     </>
   );
 }
