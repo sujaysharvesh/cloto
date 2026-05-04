@@ -2,18 +2,22 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Main() {
+  const router = useRouter();
+
+  const handleShopClick = () => {
+    router.push("/products");
+  };
+
   return (
     <div className="px-2" style={{ background: "#faf8f5" }}>
-      <div className="relative h-screen overflow-hidden" 
-      // style={{ borderRadius: "20px" }}
-      >
-
+      <div className="relative h-screen overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="/shopp.jpg"
+            src="/main2.jpg"
             alt="Background"
             fill
             priority
@@ -30,23 +34,16 @@ export default function Main() {
 
         {/* Content */}
         <div className="relative z-20 h-full flex flex-col justify-between px-10 sm:px-16 md:px-20 py-14">
-
-          {/* TOP LABELS — same as all sections */}
+          {/* TOP LABELS — empty but kept for spacing */}
           <div
             className="flex items-center justify-between pb-4"
             style={{ borderBottom: "1px solid rgba(255,255,255,0.2)" }}
           >
-            {/* <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
-              Cloto
-            </span>
-            <span className="text-[11px] uppercase tracking-[0.12em]" style={{ color: "rgba(255,255,255,0.6)" }}>
-              New Collection
-            </span> */}
+            {/* Empty div to maintain layout structure */}
           </div>
 
           {/* BOTTOM CONTENT */}
           <div className="max-w-3xl">
-
             {/* Eyebrow */}
             <p
               className="text-[11px] uppercase tracking-[0.14em] mb-4"
@@ -81,6 +78,7 @@ export default function Main() {
 
             {/* CTA — pill button matching Trend cards */}
             <button
+              onClick={handleShopClick}
               className="flex items-center gap-3 px-7 py-[14px] text-[13px] uppercase tracking-[0.12em] font-medium transition-all duration-300 hover:gap-5"
               style={{
                 background: "rgba(255,255,255,0.95)",
@@ -93,7 +91,6 @@ export default function Main() {
               Shop Collection
               <ArrowRight size={15} />
             </button>
-
           </div>
         </div>
       </div>
