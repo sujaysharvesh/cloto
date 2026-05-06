@@ -12,7 +12,7 @@ import SmoothScroll from "@/component/SmoothScroll";
 
 export default function Home() {
   return (
-    <SmoothScroll>
+    // <SmoothScroll>
       <div className="relative w-full">
 
         {/* Navbar fixed overlay */}
@@ -28,6 +28,6 @@ export default function Home() {
         <Footer />
 
       </div>
-    </SmoothScroll>
+    // </SmoothScroll>
   );
 }

@@ -92,6 +92,7 @@ export default function Trend() {
                 alt="Women's Collection"
                 fill
                 className="object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.04]"
+                loading="eager"
               />
 
               {/* overlay */}
@@ -141,6 +142,7 @@ export default function Trend() {
                 alt="Men's Collection"
                 fill
                 className="object-cover transition-transform duration-[1600ms] ease-out group-hover:scale-[1.04]"
+                loading="eager"
               />
 
               <div

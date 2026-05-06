@@ -56,6 +56,10 @@ export default function NavBar() {
   const [mobileSubmenu, setMobileSubmenu] = useState<"shop" | "explore" | null>(null);
   const [scrolled, setScrolled] = useState(false);
   const [hidden, setHidden] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const megaRef = useRef<HTMLDivElement>(null);
   const navRef = useRef<HTMLDivElement>(null);
@@ -138,16 +142,10 @@ export default function NavBar() {
   };
   const enterMenu = (key: "shop" | "explore") => { clearClose(); setActiveMenu(key); };
 
-  // Even when scrolled, keep dark text on light background
-  // Only on hero (not scrolled, no menu open) should text be white
+  // Always dark text for this design - no hero white text needed
   const isDark = !!(renderedMenu || mobileOpen || scrolled);
-  const navBg = isDark
-    ? "rgba(250,248,245,1)"
-    : "rgba(250,248,245,0)";
-  const borderColor = isDark
-    ? "rgba(0,0,0,0.07)"
-    : "rgba(255,255,255,0.2)";
-  const textColor = isDark ? "#111" : "#fff";
+  const textColor = "#111";
+  const borderColor = isDark ? "rgba(0,0,0,0.07)" : "rgba(0,0,0,0.05)";
 
   return (
     <>
@@ -167,7 +165,7 @@ export default function NavBar() {
         {/* ── NAV BAR ── */}
         <div
           style={{
-            background: navBg,
+            background: "#ffffff",
             backdropFilter: scrolled || isDark ? "blur(20px)" : "none",
             WebkitBackdropFilter: scrolled || isDark ? "blur(20px)" : "none",
             borderBottom: `1px solid ${borderColor}`,
@@ -180,34 +178,19 @@ export default function NavBar() {
             style={{
               maxWidth: 1400,
               margin: "0 auto",
-              padding: "0 20px sm:px-32",
+              padding: "0 32px",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
               height: 68,
-              gap: 0,
             }}
           >
-            {/* LEFT — desktop links - now visible on all screens */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 24,
-                flex: 1,
-              }}
-            >
+            {/* LEFT — desktop links */}
+            <div className="hidden md:flex" style={{ alignItems: "center", gap: 24, flex: 1 }}>
               {NAV_LINKS.map(({ label, key }) => (
                 <button
                   key={key}
                   onMouseEnter={() => enterMenu(key)}
-                  onClick={() => {
-                    // For mobile, handle click differently
-                    if (window.innerWidth < 768) {
-                      setMobileOpen(true);
-                      setMobileSubmenu(key);
-                    }
-                  }}
                   style={{
                     background: "none",
                     border: "none",
@@ -221,7 +204,7 @@ export default function NavBar() {
                     transition: "color 0.3s ease, opacity 0.3s ease",
                     opacity: activeMenu && activeMenu !== key ? 0.4 : 1,
                     position: "relative",
-                    fontFamily: "inherit",
+                    fontFamily: "'Cormorant Garamond', Georgia, serif",
                   }}
                 >
                   {label}
@@ -253,7 +236,7 @@ export default function NavBar() {
                   color: textColor,
                   transition: "color 0.3s ease, opacity 0.3s ease",
                   opacity: activeMenu ? 0.4 : 1,
-                  fontFamily: "inherit",
+                  fontFamily: "'Cormorant Garamond', Georgia, serif"
                 }}
               >
                 Subscribe
@@ -289,28 +272,102 @@ export default function NavBar() {
               </span>
             </button>
 
-            {/* RIGHT — icons + mobile hamburger */}
+            {/* RIGHT — icons */}
             <div style={{ display: "flex", alignItems: "center", gap: 4, marginLeft: "auto" }}>
               {/* Search */}
-              <button
+              <div
+                ref={searchContainerRef}
                 style={{
-                  background: "none",
-                  border: "none",
-                  cursor: "pointer",
-                  width: 38,
-                  height: 38,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  color: textColor,
-                  transition: "color 0.3s ease, opacity 0.2s",
-                  borderRadius: "50%",
+                  overflow: "hidden",
+                  width: searchOpen ? 220 : 38,
+                  height: 38,
+                  borderRadius: 999,
+                  border: searchOpen ? "1px solid rgba(0,0,0,0.15)" : "1px solid transparent",
+                  transition: "width 0.45s cubic-bezier(0.16, 1, 0.3, 1), border 0.3s ease",
+                  background: searchOpen ? "rgba(0,0,0,0.04)" : "transparent",
                 }}
-                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.6")}
-                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
               >
-                <Search size={16} strokeWidth={1.5} />
-              </button>
+                <button
+                  onClick={() => {
+                    setSearchOpen((prev) => {
+                      const next = !prev;
+                      if (next) setTimeout(() => searchInputRef.current?.focus(), 50);
+                      else setSearchQuery("");
+                      return next;
+                    });
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    width: 38,
+                    height: 38,
+                    flexShrink: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: textColor,
+                    transition: "opacity 0.2s",
+                  }}
+                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.6")}
+                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                >
+                  <Search size={16} strokeWidth={1.5} />
+                </button>
+
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); }
+                    if (e.key === "Enter") { /* handle search */ }
+                  }}
+                  placeholder="Search..."
+                  style={{
+                    flex: 1,
+                    background: "none",
+                    border: "none",
+                    outline: "none",
+                    fontSize: 13,
+                    letterSpacing: "0.04em",
+                    color: textColor,
+                    caretColor: textColor,
+                    opacity: searchOpen ? 1 : 0,
+                    transition: "opacity 0.3s ease 0.15s",
+                    paddingRight: 12,
+                    fontFamily: "inherit",
+                  }}
+                />
+
+                {searchOpen && (
+                  <button
+                    onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      width: 28,
+                      height: 28,
+                      flexShrink: 0,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: textColor,
+                      opacity: 0.5,
+                      marginRight: 4,
+                      borderRadius: "50%",
+                      transition: "opacity 0.2s",
+                    }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.5")}
+                  >
+                    <X size={13} strokeWidth={2} />
+                  </button>
+                )}
+              </div>
 
               {/* Cart */}
               <button
@@ -324,7 +381,7 @@ export default function NavBar() {
                   alignItems: "center",
                   justifyContent: "center",
                   color: textColor,
-                  transition: "color 0.3s ease, opacity 0.2s",
+                  transition: "opacity 0.2s",
                   position: "relative",
                   borderRadius: "50%",
                 }}
@@ -340,13 +397,13 @@ export default function NavBar() {
                     width: 4,
                     height: 4,
                     borderRadius: "50%",
-                    background: textColor === "#fff" ? "#fff" : "#111",
+                    background: textColor,
                     opacity: 0.8,
                   }}
                 />
               </button>
 
-              {/* Mobile hamburger - hide on larger screens */}
+              {/* Mobile hamburger */}
               <button
                 className="md:hidden"
                 onClick={() => {
@@ -368,16 +425,11 @@ export default function NavBar() {
                   borderRadius: "50%",
                 }}
               >
-                {mobileOpen ? (
-                  <X size={18} strokeWidth={1.5} />
-                ) : (
-                  <Menu size={18} strokeWidth={1.5} />
-                )}
+                {mobileOpen ? <X size={18} strokeWidth={1.5} /> : <Menu size={18} strokeWidth={1.5} />}
               </button>
             </div>
           </div>
 
-          {/* thin accent line below logo - removed for cleaner look */}
           <div
             ref={lineRef}
             style={{
@@ -392,7 +444,7 @@ export default function NavBar() {
           />
         </div>
 
-        {/* ── DESKTOP MEGA MENU (hidden on mobile) ── */}
+        {/* ── DESKTOP MEGA MENU ── */}
         <div
           ref={megaRef}
           style={{
@@ -402,7 +454,7 @@ export default function NavBar() {
             width: "100%",
             visibility: "hidden",
             clipPath: "inset(0% 0% 100% 0%)",
-            background: "#faf8f5",
+            background: "#ffffff",
             borderBottom: "1px solid rgba(0,0,0,0.06)",
             zIndex: 5,
             paddingTop: 68,
@@ -425,16 +477,7 @@ export default function NavBar() {
               }}
             >
               <div>
-                <p
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color: "#aaa",
-                    marginBottom: 20,
-                    fontWeight: 500,
-                  }}
-                >
+                <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#aaa", marginBottom: 20, fontWeight: 500 }}>
                   Browse
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -459,12 +502,8 @@ export default function NavBar() {
                         gap: 8,
                         lineHeight: 1.2,
                       }}
-                      onMouseEnter={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = "0.5";
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.currentTarget as HTMLButtonElement).style.opacity = "1";
-                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.5"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "1"; }}
                     >
                       {label}
                     </button>
@@ -473,23 +512,8 @@ export default function NavBar() {
               </div>
 
               <div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 24,
-                  }}
-                >
-                  <p
-                    style={{
-                      fontSize: 10,
-                      letterSpacing: "0.18em",
-                      textTransform: "uppercase",
-                      color: "#aaa",
-                      fontWeight: 500,
-                    }}
-                  >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+                  <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#aaa", fontWeight: 500 }}>
                     Featured
                   </p>
                   <button
@@ -537,16 +561,7 @@ export default function NavBar() {
               }}
             >
               <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                <p
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color: "#aaa",
-                    marginBottom: 20,
-                    fontWeight: 500,
-                  }}
-                >
+                <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#aaa", marginBottom: 20, fontWeight: 500 }}>
                   Company
                 </p>
                 {EXPLORE_LINKS.map(({ label, href }) => (
@@ -576,30 +591,13 @@ export default function NavBar() {
               </div>
 
               <div>
-                <p
-                  style={{
-                    fontSize: 10,
-                    letterSpacing: "0.18em",
-                    textTransform: "uppercase",
-                    color: "#aaa",
-                    marginBottom: 20,
-                    fontWeight: 500,
-                  }}
-                >
+                <p style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "#aaa", marginBottom: 20, fontWeight: 500 }}>
                   Latest
                 </p>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                   {[
-                    {
-                      bg: "linear-gradient(145deg, #c8b99a 0%, #a8927a 100%)",
-                      label: "SS25 Collection",
-                      sub: "Timeless styles for the season",
-                    },
-                    {
-                      bg: "linear-gradient(145deg, #b8c4b0 0%, #8a9e80 100%)",
-                      label: "Sustainable Fabrics",
-                      sub: "100% organic cotton from field to closet",
-                    },
+                    { bg: "linear-gradient(145deg, #c8b99a 0%, #a8927a 100%)", label: "SS25 Collection", sub: "Timeless styles for the season" },
+                    { bg: "linear-gradient(145deg, #b8c4b0 0%, #8a9e80 100%)", label: "Sustainable Fabrics", sub: "100% organic cotton from field to closet" },
                   ].map(({ bg, label, sub }, i) => (
                     <div
                       key={i}
@@ -608,21 +606,9 @@ export default function NavBar() {
                       onMouseEnter={(e) => ((e.currentTarget as HTMLDivElement).style.opacity = "0.8")}
                       onMouseLeave={(e) => ((e.currentTarget as HTMLDivElement).style.opacity = "1")}
                     >
-                      <div
-                        style={{
-                          width: "100%",
-                          height: 160,
-                          background: bg,
-                          marginBottom: 14,
-                          borderRadius: 2,
-                        }}
-                      />
-                      <p style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 4, letterSpacing: "0.01em" }}>
-                        {label}
-                      </p>
-                      <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, letterSpacing: "0.02em" }}>
-                        {sub}
-                      </p>
+                      <div style={{ width: "100%", height: 160, background: bg, marginBottom: 14, borderRadius: 2 }} />
+                      <p style={{ fontSize: 14, fontWeight: 500, color: "#111", marginBottom: 4, letterSpacing: "0.01em" }}>{label}</p>
+                      <p style={{ fontSize: 12, color: "#888", lineHeight: 1.5, letterSpacing: "0.02em" }}>{sub}</p>
                     </div>
                   ))}
                 </div>
@@ -632,13 +618,13 @@ export default function NavBar() {
         </div>
       </div>
 
-      {/* ── MOBILE MENU (for when hamburger is clicked) ── */}
+      {/* ── MOBILE MENU ── */}
       <div
         style={{
           position: "fixed",
           inset: 0,
           top: 68,
-          background: "#faf8f5",
+          background: "#ffffff",
           zIndex: 90,
           overflowY: "auto",
           transform: mobileOpen ? "translateX(0)" : "translateX(-100%)",
@@ -646,17 +632,16 @@ export default function NavBar() {
         }}
         className="md:hidden"
       >
-        <div style={{ padding: "32px 24px 60px" }}>
-
+        <div style={{ padding: "32px 24px 60px", position: "relative", minHeight: "calc(100vh - 68px)" }}>
           {/* Main links */}
           <div
             style={{
               transform: mobileSubmenu ? "translateX(-100%)" : "translateX(0)",
               transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
               position: "absolute",
-              left: 0,
-              right: 0,
-              padding: "32px 24px",
+              left: 24,
+              right: 24,
+              top: 32,
             }}
           >
             {NAV_LINKS.map(({ label, key }) => (
@@ -728,9 +713,9 @@ export default function NavBar() {
               transform: mobileSubmenu ? "translateX(0)" : "translateX(100%)",
               transition: "transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
               position: "absolute",
-              left: 0,
-              right: 0,
-              padding: "32px 24px",
+              left: 24,
+              right: 24,
+              top: 32,
             }}
           >
             <button

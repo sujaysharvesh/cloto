@@ -26,39 +26,38 @@ export default function ProductCard({ images, title, code, price }: ProductCardP
   const primary = images[0];
   const hover = images[1] ?? images[0];
 
-  // For mobile, show info overlay immediately without hover
   if (isMobile) {
     return (
-      <div className="relative min-w-[280px] sm:min-w-[320px] md:min-w-[360px] h-[500px] sm:h-[600px] md:h-[760px] bg-[#f4f4f4] overflow-hidden flex-shrink-0">
+      <div className="relative w-[72vw] h-[88vw] max-w-[340px] max-h-[420px] bg-[#f4f4f4] overflow-hidden flex-shrink-0">
         {/* PRIMARY IMAGE */}
         <div className="absolute inset-0">
           <Image src={primary} alt={title} fill className="object-cover" />
         </div>
 
-        {/* PRODUCT INFO - Always visible on mobile */}
-        <div className="absolute left-3 right-3 bottom-3 md:left-4 md:right-4 md:bottom-4 bg-white/95 backdrop-blur-sm p-4 md:p-5">
+        {/* PRODUCT INFO */}
+        <div className="absolute left-3 right-3 bottom-3 bg-white/95 backdrop-blur-sm p-4">
           <div className="flex items-end justify-between">
             <div className="flex-1">
-              <h3 className="text-[11px] md:text-[12px] font-black uppercase leading-tight">
+              <h3 className="text-[11px] font-black uppercase leading-tight tracking-[0.12em]">
                 {title}
               </h3>
-              <p className="text-[#6f7b84] text-[11px] md:text-[13px] font-semibold mt-1">
+              <p className="text-[#6f7b84] text-[11px] font-semibold mt-0.5">
                 ({code})
               </p>
-              <p className="mt-6 md:mt-10 text-[18px] md:text-[20px] font-black">
+              <p className="mt-4 text-[17px] font-black">
                 {price}
               </p>
             </div>
-            <ArrowRight size={20} strokeWidth={1.8} className="flex-shrink-0 ml-2" />
+            <ArrowRight size={18} strokeWidth={1.8} className="flex-shrink-0 ml-2 mb-0.5" />
           </div>
         </div>
       </div>
     );
   }
 
-  // Desktop version with hover effects
+  // Desktop
   return (
-    <div className="group relative min-w-[360px] h-[760px] bg-[#f4f4f4] overflow-hidden flex-shrink-0">
+    <div className="group relative min-w-[460px] h-[560px] bg-[#f4f4f4] overflow-hidden flex-shrink-0">
       {/* PRIMARY IMAGE */}
       <div className="absolute inset-0 transition-opacity duration-500 ease-out group-hover:opacity-0">
         <Image src={primary} alt={title} fill className="object-cover" />

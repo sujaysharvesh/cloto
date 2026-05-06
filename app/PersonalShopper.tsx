@@ -69,6 +69,7 @@ export default function PersonalShopper() {
                 alt="Personal Shopper"
                 fill
                 className="object-cover transition-transform duration-[1600ms] ease-out hover:scale-[1.03]"
+                loading="eager"
               />
 
               <div

@@ -1,26 +1,27 @@
 "use client";
 
 import Image from "next/image";
-import { Plus, ArrowLeft, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
+import { Plus, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useParams } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { allProducts } from "@/data/products";
-import SmoothScroll from "@/component/SmoothScroll";
 import Footer from "@/app/Footer";
+import SmoothScroll from "@/component/SmoothScroll";
 
 const sizes = ["XS", "S", "M", "L", "XL"];
 
 export default function ProductPage() {
-  const router = useRouter();
   const params = useParams();
   const code = params.code as string;
   const product = allProducts.find((p) => p.code === code);
 
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [washOpen, setWashOpen] = useState(false);
+  const [shippingOpen, setShippingOpen] = useState(false);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [sizeOpen, setSizeOpen] = useState(false);
-
+  const [quantity, setQuantity] = useState(1);
+  const [wishlisted, setWishlisted] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const closeLightbox = () => setLightboxIndex(null);
@@ -46,367 +47,267 @@ export default function ProductPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [lightboxIndex, prevImage, nextImage]);
 
-  useEffect(() => {
-    document.body.style.overflow = lightboxIndex !== null ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
-  }, [lightboxIndex]);
+  if (!product) return null;
 
-  if (!product) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "#faf8f5" }}>
-        <p className="text-[13px] uppercase tracking-[0.12em]" style={{ color: "#8a847c" }}>
-          Product not found
-        </p>
-      </div>
-    );
-  }
-
-  const total = product.images.length;
   const mainImage = product.images[0];
-  const subImages = product.images.slice(1, 3); // Images 2 and 3 (index 1, 2)
-  const fourthImage = product.images[3]; // Image 4 for bottom section
+  const midImages = product.images.slice(1, 3);
+  const remainingImages = product.images.slice(3);
 
   return (
-    <SmoothScroll>
-      <section className="w-full" style={{ background: "#fafafa" }}>
+    <section className="w-full bg-white">
 
-        {/* LIGHTBOX */}
-        {lightboxIndex !== null && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 1000,
-              background: "rgba(0,0,0,0.95)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onClick={closeLightbox}
-          >
-            <div
-              style={{ position: "relative", width: "100vw", height: "100vh" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Image
-                src={product.images[lightboxIndex]}
-                alt={`${product.title} ${lightboxIndex + 1}`}
-                fill
-                className="object-contain"
-                priority
-              />
-            </div>
-
+      {/* LIGHTBOX OVERLAY */}
+      {lightboxIndex !== null && (
+        <div
+          className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center "
+          onClick={closeLightbox}
+        >
+          <div className="relative w-screen h-screen  p-2 pt-2" onClick={(e) => e.stopPropagation()}>
+            <Image src={product.images[lightboxIndex]} alt="Zoom" fill className="object-contain p-1" priority />
             <button
-              onClick={closeLightbox}
-              style={{
-                position: "fixed", top: 20, right: 22,
-                background: "none", border: "none",
-                color: "rgba(255,255,255,0.75)", cursor: "pointer",
-                zIndex: 10, padding: 8, display: "flex",
-              }}
-              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#fff")}
-              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.75)")}
+              onClick={(e) => { e.stopPropagation(); prevImage(); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-1"
             >
-              <X size={20} />
+              <ChevronLeft size={28} />
             </button>
-
-            <span
-              style={{
-                position: "fixed", top: 28, left: "50%", transform: "translateX(-50%)",
-                fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase",
-                color: "rgba(255,255,255,0.45)", zIndex: 10, pointerEvents: "none",
-              }}
+            <button
+              onClick={(e) => { e.stopPropagation(); nextImage(); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white p-3"
             >
-              {lightboxIndex + 1} / {total}
-            </span>
-
-            {total > 1 && (
-              <>
-                <button
-                  onClick={(e) => { e.stopPropagation(); prevImage(); }}
-                  style={{
-                    position: "fixed", left: 16, top: "50%", transform: "translateY(-50%)",
-                    width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)",
-                    color: "#fff", cursor: "pointer", zIndex: 10, transition: "background 0.2s",
-                  }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.15)")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)")}
-                >
-                  <ChevronLeft size={20} />
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); nextImage(); }}
-                  style={{
-                    position: "fixed", right: 16, top: "50%", transform: "translateY(-50%)",
-                    width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-                    background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.14)",
-                    color: "#fff", cursor: "pointer", zIndex: 10, transition: "background 0.2s",
-                  }}
-                  onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.15)")}
-                  onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)")}
-                >
-                  <ChevronRight size={20} />
-                </button>
-              </>
-            )}
-
-            {total > 1 && (
-              <div
-                style={{
-                  position: "fixed", bottom: 22, left: "50%", transform: "translateX(-50%)",
-                  display: "flex", gap: 7, zIndex: 10,
-                }}
-              >
-                {product.images.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(i); }}
-                    style={{
-                      width: lightboxIndex === i ? 22 : 6, height: 6, borderRadius: 3,
-                      background: lightboxIndex === i ? "#fff" : "rgba(255,255,255,0.3)",
-                      border: "none", cursor: "pointer", transition: "all 0.3s ease", padding: 0,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+              <ChevronRight size={28} />
+            </button>
           </div>
-        )}
+          <button onClick={closeLightbox} className="fixed top-5 right-5 text-white/70 hover:text-white p-2">
+            <X size={24} />
+          </button>
+        </div>
+      )}
 
-        {/* MAIN CONTENT - Flex row for left and right sections */}
-        <div className="flex flex-col lg:flex-row">
-          
-          {/* LEFT SECTION - Scrollable images */}
-          <div className="w-full lg:w-[58%] bg-white">
-            {/* Main Image */}
-            <div className="w-full p-2 pb-1">
-              <div
-                onClick={() => setLightboxIndex(0)}
-                className="relative group cursor-zoom-in overflow-hidden bg-[#f7f4ef]"
-                style={{ height: "clamp(500px, 80vh, 90vh)", width: "100%" }}
-              >
-                <Image
-                  src={mainImage}
-                  alt={`${product.title} - Main`}
-                  fill
-                  priority
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/10">
-                  <span className="text-[10px] tracking-[0.16em] uppercase text-white border border-white/55 px-4 py-1.5 bg-black/20">
-                    [ View ]
-                  </span>
-                </div>
-                <span className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[9px] tracking-[0.14em] text-white/65 uppercase">
-                  01 / {String(total).padStart(2, "0")}
-                </span>
-              </div>
-            </div>
+      {/* TWO COLUMN WRAPPER */}
+      <div className="flex flex-col lg:flex-row items-start pt-2 px-2">
 
-            {/* Two Sub Images side by side */}
-            <div className="flex gap-2 p-2 pt-1">
-              {subImages.map((img, idx) => {
-                const globalIndex = idx + 1;
-                return (
-                  <div
-                    key={globalIndex}
-                    onClick={() => setLightboxIndex(globalIndex)}
-                    className="relative group cursor-zoom-in overflow-hidden bg-[#f7f4ef] flex-1"
-                    style={{ height: "clamp(300px, 50vh, 60vh)" }}
-                  >
-                    <Image
-                      src={img}
-                      alt={`${product.title} ${globalIndex + 1}`}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/10">
-                      <span className="text-[10px] tracking-[0.16em] uppercase text-white border border-white/55 px-4 py-1.5 bg-black/20">
-                        [ View ]
-                      </span>
-                    </div>
-                    <span className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[9px] tracking-[0.14em] text-white/65 uppercase">
-                      {String(globalIndex + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+        {/* LEFT COLUMN */}
+        <div className="w-full lg:w-1/2">
+
+          {/* Hero image — true full viewport height, no offset */}
+          <div
+            onClick={() => setLightboxIndex(0)}
+            className="relative w-full cursor-zoom-in bg-[#f7f4ef]"
+            style={{ height: "100vh" }}
+          >
+            <Image src={mainImage} alt="Main" fill className="object-cover" priority />
           </div>
 
-          {/* RIGHT SECTION - Sticky Product Details */}
-          <div className="w-full lg:w-[42%] lg:sticky sticky lg:top-0 lg:self-start lg:h-screen lg:overflow-y-auto">
-            <div className="px-5 py-8 sm:px-8 lg:px-12 lg:py-14" style={{ borderLeft: "1px solid #e8e8e8" }}>
-              
-              {/* BACK */}
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 mb-8 w-fit transition-colors duration-200"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "#aaa" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#1a1a1a")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa")}
+          {/* Mid grid images */}
+          <div className="flex gap-2 pt-2">
+            {midImages.map((img, idx) => (
+              <div
+                key={idx}
+                onClick={() => setLightboxIndex(idx + 1)}
+                className="relative flex-1 cursor-zoom-in bg-[#f7f4ef]"
+                style={{ height: "80vh" }}
               >
-                <ArrowLeft size={14} />
-                <span className="text-[11px] uppercase tracking-[0.12em]">Back</span>
-              </button>
-
-              {/* TITLE + PRICE */}
-              <div className="flex items-start justify-between gap-6 mb-6">
-                <h1 className="text-[15px] sm:text-[16px] font-semibold uppercase tracking-[0.02em] leading-snug" style={{ color: "#111" }}>
-                  {product.title}
-                </h1>
-                <span className="text-[15px] sm:text-[16px] font-semibold whitespace-nowrap" style={{ color: "#111" }}>
-                  {product.price}
-                </span>
+                <Image src={img} alt={`Detail ${idx + 2}`} fill className="object-cover" />
               </div>
-
-              {/* DESCRIPTION */}
-              <p className="leading-relaxed mb-8" style={{ fontSize: "13px", color: "#555", fontWeight: 400, lineHeight: 1.75 }}>
-                {product.description}
-              </p>
-
-              <div style={{ borderTop: "1px solid #e8e8e8" }} />
-
-              {/* ACCORDIONS */}
-              <div>
-                <button
-                  className="w-full flex items-center justify-between py-5"
-                  style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
-                  onClick={() => setDetailsOpen(!detailsOpen)}
-                >
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>Garment Details</span>
-                  <Plus size={16} style={{ color: "#111", transform: detailsOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
-                </button>
-                {detailsOpen && (
-                  <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
-                    {product.details.map((d, i) => (
-                      <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>— {d}</p>
-                    ))}
-                  </div>
-                )}
-
-                <button
-                  className="w-full flex items-center justify-between py-5"
-                  style={{ borderBottom: "1px solid #e8e8e8", background: "none", cursor: "pointer" }}
-                  onClick={() => setWashOpen(!washOpen)}
-                >
-                  <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>Wash Care</span>
-                  <Plus size={16} style={{ color: "#111", transform: washOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease", flexShrink: 0 }} />
-                </button>
-                {washOpen && (
-                  <div className="py-4" style={{ borderBottom: "1px solid #e8e8e8" }}>
-                    {product.washCare.map((w, i) => (
-                      <p key={i} className="text-[13px] py-[3px]" style={{ color: "#555", fontWeight: 400 }}>— {w}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* SIZE + ADD TO CART */}
-              <div className="flex flex-col gap-3 mt-8">
-                <div>
-                  <button
-                    className="w-full flex items-center justify-between px-5 h-[48px]"
-                    style={{ border: "1px solid #e8e8e8", background: "#f5f5f5", cursor: "pointer" }}
-                    onClick={() => setSizeOpen(!sizeOpen)}
-                  >
-                    <span className="text-[12px] font-semibold uppercase tracking-[0.1em]" style={{ color: "#111" }}>
-                      {selectedSize ? `Size: ${selectedSize}` : "Select Size"}
-                    </span>
-                    <Plus size={14} style={{ color: "#111", transform: sizeOpen ? "rotate(45deg)" : "rotate(0deg)", transition: "transform 0.25s ease" }} />
-                  </button>
-
-                  {sizeOpen && (
-                    <div className="flex gap-2 mt-2 flex-wrap">
-                      {sizes.map((s) => (
-                        <button
-                          key={s}
-                          onClick={() => { setSelectedSize(s); setSizeOpen(false); }}
-                          className="w-12 h-10 text-[12px] font-semibold uppercase transition-all duration-200"
-                          style={{
-                            border: selectedSize === s ? "1px solid #111" : "1px solid #e8e8e8",
-                            background: selectedSize === s ? "#111" : "transparent",
-                            color: selectedSize === s ? "#fff" : "#555",
-                            cursor: "pointer",
-                          }}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <button
-                  className="w-full h-[52px] text-[13px] font-semibold uppercase tracking-[0.12em] hover:opacity-80 transition-opacity duration-200"
-                  style={{ background: "#111", color: "#fff", border: "none", cursor: "pointer" }}
-                >
-                  Add to Cart
-                </button>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* BOTTOM SECTION - Full width 4th image */}
-        {fourthImage && (
-          <div className="w-full mt-0">
-            <div
-              onClick={() => setLightboxIndex(3)}
-              className="relative group cursor-zoom-in overflow-hidden bg-[#f7f4ef]"
-              style={{ height: "clamp(500px, 100vh, 100vh)", width: "100%" }}
-            >
-              <Image
-                src={fourthImage}
-                alt={`${product.title} - Full Screen`}
-                fill
-                className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-              />
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/10">
-                <span className="text-[10px] tracking-[0.16em] uppercase text-white border border-white/55 px-4 py-1.5 bg-black/20">
-                  [ View ]
+        {/* RIGHT COLUMN — sticky, scrollbar hidden */}
+        <aside className="w-full lg:w-1/2 lg:sticky lg:top-0 lg:h-screen flex flex-col border-l border-[#ebebeb]">
+
+          {/* Scrollable zone — webkit scrollbar hidden via inline style */}
+          <div
+            className="flex-1 min-h-0 overflow-y-scroll px-8 py-10 lg:px-12 lg:py-12"
+            style={{
+              scrollbarWidth: "none",      /* Firefox */
+              msOverflowStyle: "none",     /* IE/Edge */
+            }}
+          >
+            {/* Hide webkit scrollbar — injected once */}
+            <style>{`
+              aside div::-webkit-scrollbar { display: none; }
+            `}</style>
+
+            {/* Title + Price */}
+            <div className="flex items-start justify-between mb-2 gap-4">
+              <h1 className="text-[13px] font-black uppercase tracking-[0.18em] text-[#111] leading-snug">
+                {product.title}
+              </h1>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <span className="text-[13px] font-black text-[#111] whitespace-nowrap">
+                  {product.price}
+                </span>
+                <span className="text-[10px] text-[#888] font-semibold tracking-wide">
+                  Incl. of all taxes
                 </span>
               </div>
-              <span className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[9px] tracking-[0.14em] text-white/65 uppercase">
-                04 / {String(total).padStart(2, "0")}
+            </div>
+
+            {/* Code + Tag */}
+            <div className="flex items-center gap-3 mb-5">
+              <span className="text-[10px] font-bold text-[#aaa] uppercase tracking-[0.15em]">
+                {product.code}
               </span>
+              {product.tag && (
+                <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-2 py-0.5 ${
+                  product.tag === "new" ? "bg-black text-white" : "bg-[#e5e5e5] text-[#555]"
+                }`}>
+                  {product.tag}
+                </span>
+              )}
+            </div>
+
+            {/* Description */}
+            <p className="text-[12.5px] leading-[1.85] text-[#555] font-bold mb-8 w-[90%]">
+              {product.description}
+            </p>
+
+            <div className="border-t border-[#e5e5e5] mb-6" />
+
+            {/* Size */}
+            <div className="mb-2 relative">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#111]">Size</span>
+                <button className="text-[10px] font-bold text-[#888] underline underline-offset-2 hover:text-black transition-colors">
+                  Size Guide
+                </button>
+              </div>
+              <button
+                onClick={() => setSizeOpen(!sizeOpen)}
+                className="w-full flex items-center justify-between px-5 h-12 border border-[#ddd] bg-white text-[10.5px] font-black uppercase tracking-[0.2em] hover:border-black transition-colors"
+              >
+                {selectedSize ? `Size: ${selectedSize}` : "Select Size"}
+                <Plus size={13} className={`transition-transform duration-200 ${sizeOpen ? "rotate-45" : ""}`} />
+              </button>
+              {sizeOpen && (
+                <div className="flex gap-1.5 mt-1.5">
+                  {sizes.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => { setSelectedSize(s); setSizeOpen(false); }}
+                      className={`flex-1 h-11 text-[10px] font-black border transition-all ${
+                        selectedSize === s
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-black border-[#ddd] hover:border-black"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Low stock */}
+            <p className="text-[10px] font-bold text-[#c17f3a] uppercase tracking-[0.15em] mb-6">
+              ⚠ Only 3 left in stock
+            </p>
+
+            {/* Quantity */}
+            <div className="mb-6">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#111] block mb-2">
+                Quantity
+              </span>
+              <div className="flex items-center border border-[#ddd] w-fit">
+                <button
+                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                  className="w-11 h-11 flex items-center justify-center text-[#111] hover:bg-[#f5f5f5] transition-colors text-lg font-light"
+                >−</button>
+                <span className="w-10 text-center text-[12px] font-black text-[#111]">{quantity}</span>
+                <button
+                  onClick={() => setQuantity((q) => Math.min(10, q + 1))}
+                  className="w-11 h-11 flex items-center justify-center text-[#111] hover:bg-[#f5f5f5] transition-colors text-lg font-light"
+                >+</button>
+              </div>
+            </div>
+
+            {/* Accordions */}
+            <div className="border-t border-[#e5e5e5]">
+              <Accordion title="Garment Details" isOpen={detailsOpen} toggle={() => setDetailsOpen(!detailsOpen)}>
+                {product.details.map((d, i) => (
+                  <p key={i} className="mb-1 text-[11.5px] font-bold text-[#555]">— {d}</p>
+                ))}
+              </Accordion>
+              <Accordion title="Wash Care" isOpen={washOpen} toggle={() => setWashOpen(!washOpen)}>
+                {product.washCare.map((w, i) => (
+                  <p key={i} className="mb-1 text-[11.5px] font-bold text-[#555]">— {w}</p>
+                ))}
+              </Accordion>
+              <Accordion title="Shipping & Returns" isOpen={shippingOpen} toggle={() => setShippingOpen(!shippingOpen)}>
+                <p className="mb-1 text-[11.5px] font-bold text-[#555]">— Free shipping on orders above ₹2,000</p>
+                <p className="mb-1 text-[11.5px] font-bold text-[#555]">— Standard delivery: 4–7 business days</p>
+                <p className="mb-1 text-[11.5px] font-bold text-[#555]">— Express delivery available at checkout</p>
+                <p className="mb-1 text-[11.5px] font-bold text-[#555]">— Easy 14-day returns on unworn items</p>
+                <p className="mb-1 text-[11.5px] font-bold text-[#555]">— Return shipping covered by OR</p>
+              </Accordion>
+            </div>
+
+            {/* Trust badges */}
+            <div className="mt-8 grid grid-cols-3 gap-3">
+              {[
+                { icon: "✦", label: "Locally Made" },
+                { icon: "◈", label: "Organic Cotton" },
+                { icon: "⟳", label: "Easy Returns" },
+              ].map(({ icon, label }) => (
+                <div key={label} className="flex flex-col items-center gap-1.5 py-3 border border-[#ebebeb]">
+                  <span className="text-[14px] text-[#111]">{icon}</span>
+                  <span className="text-[9px] font-black uppercase tracking-[0.15em] text-[#666] text-center">{label}</span>
+                </div>
+              ))}
             </div>
           </div>
-        )}
 
-        {/* Any additional images beyond the 4th can go here */}
-        {product.images.slice(4).map((img, idx) => {
-          const globalIndex = 4 + idx;
-          return (
-            <div key={globalIndex} className="w-full">
-              <div
-                onClick={() => setLightboxIndex(globalIndex)}
-                className="relative group cursor-zoom-in overflow-hidden bg-[#f7f4ef]"
-                style={{ height: "clamp(500px, 100vh, 100vh)", width: "100%" }}
-              >
-                <Image
-                  src={img}
-                  alt={`${product.title} ${globalIndex + 1}`}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/10">
-                  <span className="text-[10px] tracking-[0.16em] uppercase text-white border border-white/55 px-4 py-1.5 bg-black/20">
-                    [ View ]
-                  </span>
-                </div>
-                <span className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-[9px] tracking-[0.14em] text-white/65 uppercase">
-                  {String(globalIndex + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-        
-        <Footer/>
-      </section>
-    </SmoothScroll>
+          {/* ADD TO BAG + WISHLIST — always visible at bottom */}
+          <div className="flex-shrink-0 px-8 pb-8 lg:px-12 lg:pb-10 pt-4 border-t border-[#ebebeb] flex flex-col gap-2 bg-white">
+            <button className="w-full bg-black text-white text-[10.5px] font-black uppercase tracking-[0.3em] hover:bg-[#222] transition-colors py-4">
+              Add to Bag
+            </button>
+            <button
+              onClick={() => setWishlisted((w) => !w)}
+              className={`w-full border text-[10.5px] font-black uppercase tracking-[0.3em] transition-all py-4 ${
+                wishlisted ? "border-black bg-black text-white" : "border-[#ddd] text-[#111] hover:border-black"
+              }`}
+            >
+              {wishlisted ? "♥  Wishlisted" : "♡  Wishlist"}
+            </button>
+          </div>
+        </aside>
+      </div>
+
+      {/* FULL WIDTH REMAINING IMAGES */}
+      <div className="w-full h-full bg-white flex flex-col pt-2">
+        {remainingImages.map((img, idx) => (
+          <div
+            key={idx}
+            onClick={() => setLightboxIndex(idx + 3)}
+            className="relative w-full cursor-zoom-in bg-[#f7f4ef]"
+            style={{ height: "110vh" }}
+          >
+            <Image src={img} alt={`Full detail ${idx + 4}`} fill className="object-cover" />
+          </div>
+        ))}
+      </div>
+
+      <Footer />
+    </section>
+  );
+}
+
+function Accordion({
+  title, children, isOpen, toggle,
+}: {
+  title: string; children: React.ReactNode; isOpen: boolean; toggle: () => void;
+}) {
+  return (
+    <div className="border-b border-[#e8e8e8]">
+      <button onClick={toggle} className="w-full py-5 flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#111]">{title}</span>
+        <Plus size={14} className={`transition-transform duration-300 ${isOpen ? "rotate-45" : ""}`} />
+      </button>
+      <div className={`overflow-hidden transition-all duration-500 ${isOpen ? "max-h-96 pb-6" : "max-h-0"}`}>
+        <div className="text-[#666] leading-relaxed font-light text-[12px]">{children}</div>
+      </div>
+    </div>
   );
 }
